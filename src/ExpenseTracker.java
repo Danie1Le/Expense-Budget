@@ -355,7 +355,7 @@ public class ExpenseTracker extends JFrame implements ActionListener{
                 invalidate();
         }
 
-        // New method to reverse an expense
+        // Method to reverse an expense when user presses delete
         public void reverseExpense(int amount, String category) {
             // Add the amount back to the total budget
             budget += amount;
