@@ -1,5 +1,5 @@
 ## About this
-I coded this app trying to make something that people couold actually use and I did by using java Swing. I created 1 class where it runs the program but 3 others where one is GUI and looks of the program while also handle events and with simple math. The other would be handling the addition of adding expenses while also taking them away and the other are constants that would be used throughout the entire program to keep consistency.
+I coded this app trying to make something that people couold actually use and I did by using java Swing for the GUI and Java for the math. I created 1 class where it runs the program but 3 others where one is GUI and the looks of the program while also handle events with simple math. The other would be handling the addition of adding expenses while also taking them away and the final one, are the constants that would be used throughout the entire program to keep a consistent look throughout the program.
 ## Folder Structure
 
 The workspace contains two folders by default, where:
