@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expense Budget App</title>
+    <title>Budget Tracker</title>
     <link rel="stylesheet" href="css/styles.css">
     <!-- Add Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,91 +11,237 @@
 <body>
     <div class="container">
         <!-- Authentication Section -->
-        <div id="auth-section" class="section">
-            <h1>Expense Budget App</h1>
-            <div id="auth-forms">
-                <!-- Login Form -->
-                <div id="login-form" class="auth-form">
-                    <h2>Login</h2>
-                    <form id="login">
-                        <input type="email" id="login-email" placeholder="Email" required>
-                        <input type="password" id="login-password" placeholder="Password" required>
-                        <button type="submit">Login</button>
-                    </form>
-                    <button id="google-signin" class="google-btn">Sign in with Google</button>
-                    <p>Don't have an account? <a href="#" id="show-signup">Sign up</a></p>
+        <div id="auth-section" class="section hidden">
+            <div class="login-container">
+                <div class="login-header">
+                    <h1>Budget Tracker</h1>
+                    <p>Sign in to manage your expenses</p>
                 </div>
-
-                <!-- Signup Form -->
-                <div id="signup-form" class="auth-form hidden">
-                    <h2>Sign Up</h2>
-                    <form id="signup">
-                        <input type="email" id="signup-email" placeholder="Email" required>
-                        <input type="password" id="signup-password" placeholder="Password" required>
-                        <input type="password" id="signup-confirm-password" placeholder="Confirm Password" required>
-                        <button type="submit">Sign Up</button>
-                    </form>
-                    <p>Already have an account? <a href="#" id="show-login">Login</a></p>
+                <form id="login">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    </div>
+                    <button type="submit" class="login-button">Sign In</button>
+                </form>
+                <div class="links">
+                    <a href="#" id="forgot-password">Forgot password?</a>
+                    •
+                    <a href="#" id="show-signup">Create account</a>
                 </div>
             </div>
         </div>
 
-        <!-- Main App Section (Hidden until authenticated) -->
-        <div id="app-section" class="section hidden">
+        <!-- Main App Section -->
+        <div id="app-section" class="section">
             <header>
-                <h1>Welcome to Your Budget Dashboard</h1>
+                <h1>Budget Dashboard</h1>
                 <button id="logout-btn">Logout</button>
             </header>
 
-            <!-- Budget Section -->
-            <section id="budget-section">
-                <h2>Monthly Budget</h2>
-                <form id="budget-form">
-                    <input type="number" id="budget-amount" placeholder="Set your monthly budget" required>
-                    <button type="submit">Set Budget</button>
-                </form>
-                <div id="budget-display">
-                    <p>Current Budget: <span id="current-budget">$0</span></p>
-                    <p>Spent: <span id="total-spent">$0</span></p>
-                    <p>Remaining: <span id="remaining-budget">$0</span></p>
+            <!-- Budget Overview Cards -->
+            <section id="budget-overview" class="dashboard-section">
+                <div class="overview-cards">
+                    <div class="card">
+                        <h3>Monthly Budget</h3>
+                        <p class="amount" id="current-budget">$2,500</p>
+                        <button id="edit-budget" class="icon-button">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M15.95 3.95L16.707 3.193C17.098 2.802 17.098 2.168 16.707 1.777L16.223 1.293C15.832 0.902 15.198 0.902 14.807 1.293L14.05 2.05L15.95 3.95ZM2 15V16.9C2 17.507 2.493 18 3.1 18H5L14.432 8.568L12.532 6.668L3.1 16.1H2V15L11.432 5.568L9.532 3.668L2 11.2V15Z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="card">
+                        <h3>Total Spent</h3>
+                        <p class="amount" id="total-spent">$1,240</p>
+                        <p class="subtitle">49.6% of budget</p>
+                    </div>
+                    <div class="card">
+                        <h3>Remaining</h3>
+                        <p class="amount" id="remaining-budget">$1,260</p>
+                        <p class="subtitle">50.4% left</p>
+                    </div>
+                </div>
+
+                <!-- 50/30/20 Rule Breakdown -->
+                <div class="budget-rule-cards">
+                    <div class="card needs-card">
+                        <div class="rule-header">
+                            <h3>Needs (50%)</h3>
+                            <div class="tooltip">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 12c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm1-3H7V4h2v5z" fill="currentColor"/>
+                                </svg>
+                                <span class="tooltip-text">Essential expenses like rent, utilities, groceries, and transportation</span>
+                            </div>
+                        </div>
+                        <p class="amount" id="needs-amount">$1,250</p>
+                        <div class="progress-bar">
+                            <div class="progress" id="needs-progress" style="width: 60%"></div>
+                        </div>
+                        <p class="subtitle" id="needs-remaining">$500 left to spend</p>
+                    </div>
+                    <div class="card wants-card">
+                        <div class="rule-header">
+                            <h3>Wants (30%)</h3>
+                            <div class="tooltip">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 12c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm1-3H7V4h2v5z" fill="currentColor"/>
+                                </svg>
+                                <span class="tooltip-text">Non-essential expenses like entertainment, dining out, and shopping</span>
+                            </div>
+                        </div>
+                        <p class="amount" id="wants-amount">$750</p>
+                        <div class="progress-bar">
+                            <div class="progress" id="wants-progress" style="width: 40%"></div>
+                        </div>
+                        <p class="subtitle" id="wants-remaining">$450 left to spend</p>
+                    </div>
+                    <div class="card savings-card">
+                        <div class="rule-header">
+                            <h3>Savings (20%)</h3>
+                            <div class="tooltip">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 12c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm1-3H7V4h2v5z" fill="currentColor"/>
+                                </svg>
+                                <span class="tooltip-text">Savings, investments, and debt repayment</span>
+                            </div>
+                        </div>
+                        <p class="amount" id="savings-amount">$500</p>
+                        <div class="progress-bar">
+                            <div class="progress" id="savings-progress" style="width: 20%"></div>
+                        </div>
+                        <p class="subtitle" id="savings-remaining">$400 left to save</p>
+                    </div>
                 </div>
             </section>
 
+            <!-- Budget Edit Modal -->
+            <div id="budget-modal" class="modal hidden">
+                <div class="modal-content card">
+                    <div class="modal-header">
+                        <h3>Edit Monthly Budget</h3>
+                        <button class="icon-button" id="close-budget-modal">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M15.707 4.293a1 1 0 00-1.414 0L10 8.586 5.707 4.293a1 1 0 00-1.414 1.414L8.586 10l-4.293 4.293a1 1 0 101.414 1.414L10 11.414l4.293 4.293a1 1 0 001.414-1.414L11.414 10l4.293-4.293a1 1 0 000-1.414z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <form id="budget-form" class="modal-form">
+                        <div class="form-group">
+                            <label for="budget-amount">Monthly Budget Amount</label>
+                            <div class="input-with-prefix">
+                                <span class="prefix">$</span>
+                                <input type="number" id="budget-amount" min="0" step="0.01" required placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="secondary-button" id="cancel-budget">Cancel</button>
+                            <button type="submit" class="primary-button">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <!-- Add Expense Section -->
-            <section id="add-expense-section">
-                <h2>Add New Expense</h2>
-                <form id="expense-form">
-                    <input type="number" id="expense-amount" placeholder="Amount" required>
-                    <input type="text" id="expense-category" placeholder="Category" required>
-                    <input type="date" id="expense-date" required>
-                    <button type="submit">Add Expense</button>
+            <section id="add-expense-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Add New Expense</h2>
+                </div>
+                <form id="expense-form" class="card">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expense-amount">Amount</label>
+                            <input type="number" id="expense-amount" placeholder="$0.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="expense-category">Category</label>
+                            <select id="expense-category" required>
+                                <option value="">Select category</option>
+                                <option value="groceries">Groceries</option>
+                                <option value="utilities">Utilities</option>
+                                <option value="rent">Rent</option>
+                                <option value="transportation">Transportation</option>
+                                <option value="entertainment">Entertainment</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="expense-date">Date</label>
+                            <input type="date" id="expense-date" required>
+                        </div>
+                        <button type="submit" class="primary-button">Add Expense</button>
+                    </div>
                 </form>
             </section>
 
             <!-- Expense History Section -->
-            <section id="expense-history-section">
-                <h2>Expense History</h2>
-                <div id="expense-list">
-                    <!-- Expenses will be dynamically added here -->
+            <section id="expense-history-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Recent Expenses</h2>
+                    <button class="secondary-button">View All</button>
+                </div>
+                <div class="card">
+                    <div id="expense-list">
+                        <!-- Example expense items -->
+                        <div class="expense-item">
+                            <div class="expense-icon groceries"></div>
+                            <div class="expense-details">
+                                <h4>Groceries</h4>
+                                <p class="date">Today</p>
+                            </div>
+                            <p class="amount">$85.50</p>
+                        </div>
+                        <div class="expense-item">
+                            <div class="expense-icon utilities"></div>
+                            <div class="expense-details">
+                                <h4>Utilities</h4>
+                                <p class="date">Yesterday</p>
+                            </div>
+                            <p class="amount">$120.00</p>
+                        </div>
+                        <div class="expense-item">
+                            <div class="expense-icon entertainment"></div>
+                            <div class="expense-details">
+                                <h4>Entertainment</h4>
+                                <p class="date">Jul 12</p>
+                            </div>
+                            <p class="amount">$45.00</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <!-- Expense Analytics Section -->
-            <section id="expense-analytics-section" class="section">
-                <h2>Expense Analytics</h2>
-                <div class="chart-container">
-                    <canvas id="categoryChart"></canvas>
+            <section id="expense-analytics-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Expense Analytics</h2>
+                    <div class="chart-controls">
+                        <button class="tab-button active">Week</button>
+                        <button class="tab-button">Month</button>
+                        <button class="tab-button">Year</button>
+                    </div>
                 </div>
-                <div class="chart-container">
-                    <canvas id="trendChart"></canvas>
+                <div class="charts-container">
+                    <div class="card chart-card">
+                        <h3>Spending by Category</h3>
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <div class="card chart-card">
+                        <h3>Spending Trend</h3>
+                        <canvas id="trendChart"></canvas>
+                    </div>
                 </div>
             </section>
         </div>
     </div>
 
-    <!-- Firebase App (the core Firebase SDK) -->
+    <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
-    <!-- Add Firebase products that you want to use -->
     <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore.js"></script>
     
