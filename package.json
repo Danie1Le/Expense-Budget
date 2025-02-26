@@ -1,0 +1,23 @@
+{
+  "name": "expense-budget",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Danie1Le/Expense-Budget.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Danie1Le/Expense-Budget/issues"
+  },
+  "homepage": "https://github.com/Danie1Le/Expense-Budget#readme",
+  "description": "",
+  "dependencies": {
+    "firebase": "^11.3.1"
+  }
+}

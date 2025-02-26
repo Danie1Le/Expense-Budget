@@ -1,0 +1,194 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    background-color: #f5f7fa;
+    color: #2d3748;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Section Styles */
+.section {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Authentication Forms */
+.auth-form {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.auth-form h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #2d3748;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.auth-form button,
+.google-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.auth-form button:hover {
+    background-color: #3182ce;
+}
+
+.google-btn {
+    background-color: #fff;
+    color: #2d3748;
+    border: 1px solid #e2e8f0;
+    margin-top: 1rem;
+}
+
+.google-btn:hover {
+    background-color: #f7fafc;
+}
+
+/* Main App Styles */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+#logout-btn {
+    padding: 0.5rem 1rem;
+    background-color: #e53e3e;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#logout-btn:hover {
+    background-color: #c53030;
+}
+
+/* Budget Display */
+#budget-display {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+#budget-display p {
+    padding: 1rem;
+    background-color: #f7fafc;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Forms */
+form {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+input[type="number"],
+input[type="text"],
+input[type="date"] {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+button {
+    padding: 0.75rem 1.5rem;
+    background-color: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #3182ce;
+}
+
+/* Expense List */
+#expense-list {
+    margin-top: 1rem;
+}
+
+.expense-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 1rem;
+    align-items: center;
+    padding: 1rem;
+    background-color: #f7fafc;
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none;
+}
+
+/* Chart Styles */
+.chart-container {
+    margin: 2rem 0;
+    padding: 1rem;
+    background-color: #f7fafc;
+    border-radius: 5px;
+    height: 300px;
+}
+
+#expense-analytics-section {
+    margin-top: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    form {
+        flex-direction: column;
+    }
+
+    .expense-item {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+} 

@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if the user is accessing their own data
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Budgets collection rules
+    match /budgets/{userId} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow write: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // Expenses collection rules
+    match /expenses/{expenseId} {
+      allow read: if isAuthenticated() && isOwner(resource.data.userId);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow update, delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+  }
+} 
