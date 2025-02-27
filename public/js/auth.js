@@ -1,11 +1,11 @@
-import { auth } from './firebase-config.js';
 import {
     createUserWithEmailAndPassword,
+    GoogleAuthProvider,
     signInWithEmailAndPassword,
     signInWithPopup,
-    GoogleAuthProvider,
     signOut
 } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js";
+import { auth } from './firebase-config.js';
 
 // DOM Elements
 const authSection = document.getElementById('auth-section');
@@ -85,17 +85,18 @@ logoutBtn.addEventListener('click', async () => {
     }
 });
 
-// Auth State Observer
+// Comment out or remove the auth state observer
 auth.onAuthStateChanged((user) => {
     if (user) {
-        // User is signed in
         authSection.classList.add('hidden');
         appSection.classList.remove('hidden');
     } else {
-        // User is signed out
         appSection.classList.add('hidden');
         authSection.classList.remove('hidden');
-        loginFormDiv.classList.remove('hidden');
-        signupFormDiv.classList.add('hidden');
     }
-}); 
+});
+
+
+// Instead, ensure the app is always visible
+document.getElementById('auth-section').classList.add('hidden');
+document.getElementById('app-section').classList.remove('hidden'); 
