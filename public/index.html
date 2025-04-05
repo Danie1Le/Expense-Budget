@@ -119,51 +119,59 @@
                 </div>
             </div>
 
-            <!-- Add Expense Section -->
-            <section id="add-expense-section" class="dashboard-section">
-                <div class="section-header">
-                    <h2>Add New Expense</h2>
-                </div>
-                <form id="expense-form" class="card">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="expense-amount">Amount</label>
-                            <input type="number" id="expense-amount" placeholder="$0.00" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="expense-category">Category</label>
-                            <select id="expense-category" required>
-                                <option value="">Select category</option>
-                                <option value="groceries">Groceries</option>
-                                <option value="utilities">Utilities</option>
-                                <option value="rent">Rent</option>
-                                <option value="transportation">Transportation</option>
-                                <option value="entertainment">Entertainment</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="expense-date">Date</label>
-                            <input type="date" id="expense-date" required>
-                        </div>
-                        <button type="submit" class="primary-button">Add Expense</button>
+            <!-- Add Expense and Recent Expenses Section in a flex container -->
+            <section class="dashboard-flex-section">
+                <!-- Add Expense Section -->
+                <section id="add-expense-section" class="dashboard-section half-width">
+                    <div class="section-header">
+                        <h2>Add New Expense</h2>
                     </div>
-                </form>
-            </section>
+                    <form id="expense-form" class="card">
+                        <div class="form-groups">
+                            <div class="form-group">
+                                <label for="expense-amount">Amount</label>
+                                <input type="number" id="expense-amount" placeholder="$0.00" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="expense-category">Category</label>
+                                <select id="expense-category" required>
+                                    <option value="">Select category</option>
+                                    <option value="groceries">Groceries</option>
+                                    <option value="utilities">Utilities</option>
+                                    <option value="rent">Rent</option>
+                                    <option value="transportation">Transportation</option>
+                                    <option value="entertainment">Entertainment</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="expense-date">Date</label>
+                                <input type="date" id="expense-date" required>
+                            </div>
+                        </div>
+                        <div class="form-submit">
+                            <button type="submit" class="primary-button">Add Expense</button>
+                        </div>
+                    </form>
+                </section>
 
-            <!-- Expense History Section -->
-            <section id="expense-history-section" class="dashboard-section">
-                <div class="section-header">
-                    <h2>Recent Expenses</h2>
-                    <div class="button-group">
-                        <button id="reset-expenses" class="danger-button">Reset All</button>
+                <!-- Expense History Section -->
+                <section id="expense-history-section" class="dashboard-section half-width">
+                    <div class="section-header">
+                        <h2>Recent Expenses</h2>
+                        <div class="button-group">
+                            <button id="reset-expenses" class="danger-button">Reset All</button>
+                        </div>
                     </div>
-                </div>
-                <div class="card">
-                    <div id="expense-list">
-                        <!-- Expenses will be added here -->
+                    <div class="card expense-list-card">
+                        <div id="expense-list">
+                            <!-- Expenses will be added here -->
+                            <div id="empty-expense-message" class="empty-state">
+                                <p>No expenses yet. Add your first expense to get started!</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </section>
             </section>
 
             <!-- Expense Analytics Section -->
@@ -190,352 +198,10 @@
         </div>
     </div>
 
-    <script>
-        // DOM Elements
-        const budgetModal = document.getElementById('budget-modal');
-        const editBudgetBtn = document.getElementById('edit-budget');
-        const closeBudgetModalBtn = document.getElementById('close-budget-modal');
-        const cancelBudgetBtn = document.getElementById('cancel-budget');
-        const budgetForm = document.getElementById('budget-form');
-        const budgetAmountInput = document.getElementById('budget-amount');
-        const currentBudgetSpan = document.getElementById('current-budget');
-        const totalSpentSpan = document.getElementById('total-spent');
-        const remainingBudgetSpan = document.getElementById('remaining-budget');
-        const expenseForm = document.getElementById('expense-form');
-        const expenseList = document.getElementById('expense-list');
-        const resetExpensesBtn = document.getElementById('reset-expenses');
-
-        console.log('Elements loaded:', {
-            budgetModal,
-            editBudgetBtn,
-            closeBudgetModalBtn,
-            cancelBudgetBtn
-        });
-
-        // Budget Modal Functions
-        function openBudgetModal() {
-            console.log('Opening budget modal');
-            const currentBudget = parseFloat(currentBudgetSpan.textContent.replace(/[^0-9.-]+/g, '')) || 0;
-            budgetAmountInput.value = currentBudget;
-            budgetModal.style.display = 'flex';
-        }
-
-        function closeBudgetModal() {
-            console.log('Closing budget modal');
-            budgetModal.style.display = 'none';
-        }
-
-        // Event Listeners
-        editBudgetBtn.addEventListener('click', function() {
-            console.log('Edit budget button clicked');
-            openBudgetModal();
-        });
-
-        closeBudgetModalBtn.addEventListener('click', function() {
-            console.log('Close modal button clicked');
-            closeBudgetModal();
-        });
-
-        cancelBudgetBtn.addEventListener('click', function() {
-            console.log('Cancel button clicked');
-            closeBudgetModal();
-        });
-
-        // Handle Budget Form Submission
-        budgetForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            console.log('Budget form submitted');
-            const newBudget = parseFloat(budgetAmountInput.value) || 0;
-            
-            // Update displays
-            updateBudgetDisplay(newBudget);
-            closeBudgetModal();
-        });
-
-        // Handle Expense Form Submission
-        expenseForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            console.log('Expense form submitted');
-            
-            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
-            const category = document.getElementById('expense-category').value;
-            const date = document.getElementById('expense-date').value || new Date().toISOString().split('T')[0];
-            
-            if (!amount || !category) {
-                alert('Please fill in all required fields');
-                return;
-            }
-
-            // Add expense to list
-            const expense = { amount, category, date };
-            const expenseElement = createExpenseElement(expense);
-            expenseList.insertBefore(expenseElement, expenseList.firstChild);
-            
-            // Update totals
-            const currentTotal = parseFloat(totalSpentSpan.textContent.replace(/[^0-9.-]+/g, '')) || 0;
-            const newTotal = currentTotal + amount;
-            updateTotalSpent(newTotal);
-            
-            // Clear form
-            expenseForm.reset();
-            document.getElementById('expense-date').valueAsDate = new Date();
-        });
-
-        // Reset Expenses
-        resetExpensesBtn.addEventListener('click', function() {
-            console.log('Reset expenses clicked');
-            if (confirm('Are you sure you want to reset all expenses?')) {
-                expenseList.innerHTML = '';
-                updateTotalSpent(0);
-            }
-        });
-
-        // Helper Functions
-        function updateBudgetDisplay(budgetAmount) {
-            console.log('Updating budget display to', budgetAmount);
-            const formatter = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD'
-            });
-
-            currentBudgetSpan.textContent = formatter.format(budgetAmount);
-            
-            const totalSpent = parseFloat(totalSpentSpan.textContent.replace(/[^0-9.-]+/g, '')) || 0;
-            const remaining = budgetAmount - totalSpent;
-            
-            remainingBudgetSpan.textContent = formatter.format(remaining);
-            
-            if (budgetAmount > 0) {
-                const spentPercentage = (totalSpent / budgetAmount) * 100;
-                const remainingPercentage = (remaining / budgetAmount) * 100;
-                
-                document.querySelector('.card:nth-child(2) .subtitle').textContent = 
-                    `${spentPercentage.toFixed(1)}% of budget`;
-                document.querySelector('.card:nth-child(3) .subtitle').textContent = 
-                    `${remainingPercentage.toFixed(1)}% left`;
-            } else {
-                document.querySelector('.card:nth-child(2) .subtitle').textContent = '0% of budget';
-                document.querySelector('.card:nth-child(3) .subtitle').textContent = '0% left';
-            }
-
-            // Update 50/30/20 rule
-            updateBudgetRuleDisplay(budgetAmount, totalSpent);
-        }
-
-        function updateTotalSpent(total) {
-            console.log('Updating total spent to', total);
-            const formatter = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD'
-            });
-            
-            totalSpentSpan.textContent = formatter.format(total);
-            
-            const currentBudget = parseFloat(currentBudgetSpan.textContent.replace(/[^0-9.-]+/g, '')) || 0;
-            const remaining = currentBudget - total;
-            
-            remainingBudgetSpan.textContent = formatter.format(remaining);
-            
-            if (currentBudget > 0) {
-                const spentPercentage = (total / currentBudget) * 100;
-                const remainingPercentage = (remaining / currentBudget) * 100;
-                
-                document.querySelector('.card:nth-child(2) .subtitle').textContent = 
-                    `${spentPercentage.toFixed(1)}% of budget`;
-                document.querySelector('.card:nth-child(3) .subtitle').textContent = 
-                    `${remainingPercentage.toFixed(1)}% left`;
-            } else {
-                document.querySelector('.card:nth-child(2) .subtitle').textContent = '0% of budget';
-                document.querySelector('.card:nth-child(3) .subtitle').textContent = '0% left';
-            }
-
-            // Visual indicator for negative budget
-            if (total > currentBudget && currentBudget > 0) {
-                remainingBudgetSpan.classList.add('negative');
-            } else {
-                remainingBudgetSpan.classList.remove('negative');
-            }
-
-            // Update 50/30/20 rule
-            updateBudgetRuleDisplay(currentBudget, total);
-        }
-
-        function updateBudgetRuleDisplay(budgetAmount, totalSpent) {
-            console.log('Updating budget rule with budget:', budgetAmount, 'spent:', totalSpent);
-            const formatter = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD'
-            });
-
-            // Calculate 50/30/20 amounts
-            const needsAmount = budgetAmount * 0.5;
-            const wantsAmount = budgetAmount * 0.3;
-            const savingsAmount = budgetAmount * 0.2;
-
-            // Update the amounts in the UI
-            document.getElementById('needs-amount').textContent = formatter.format(needsAmount);
-            document.getElementById('wants-amount').textContent = formatter.format(wantsAmount);
-            document.getElementById('savings-amount').textContent = formatter.format(savingsAmount);
-
-            // Calculate percentages for progress bars (only if budget > 0)
-            let needsPercentage = 0;
-            let wantsPercentage = 0;
-            let savingsPercentage = 0;
-
-            if (budgetAmount > 0) {
-                // Simplified for demo - just showing overall percentage
-                const percentageSpent = Math.min((totalSpent / budgetAmount) * 100, 100);
-                needsPercentage = percentageSpent;
-                wantsPercentage = percentageSpent;
-                savingsPercentage = percentageSpent;
-            }
-
-            // Update progress bars
-            document.getElementById('needs-progress').style.width = `${needsPercentage}%`;
-            document.getElementById('wants-progress').style.width = `${wantsPercentage}%`;
-            document.getElementById('savings-progress').style.width = `${savingsPercentage}%`;
-
-            // Update remaining amounts
-            const needsSpent = totalSpent * 0.5;
-            const wantsSpent = totalSpent * 0.3;
-            const savingsSpent = totalSpent * 0.2;
-
-            document.getElementById('needs-remaining').textContent = 
-                `${formatter.format(Math.max(needsAmount - needsSpent, 0))} left to spend`;
-            document.getElementById('wants-remaining').textContent = 
-                `${formatter.format(Math.max(wantsAmount - wantsSpent, 0))} left to spend`;
-            document.getElementById('savings-remaining').textContent = 
-                `${formatter.format(Math.max(savingsAmount - savingsSpent, 0))} left to save`;
-        }
-
-        function createExpenseElement(expense) {
-            console.log('Creating expense element for', expense);
-            const formatter = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD'
-            });
-
-            // Format category
-            let displayCategory = expense.category;
-            if (typeof displayCategory === 'string') {
-                displayCategory = expense.category.charAt(0).toUpperCase() + 
-                                expense.category.slice(1).toLowerCase();
-            }
-
-            const expenseElement = document.createElement('div');
-            expenseElement.className = 'expense-item';
-            
-            // Use a default category icon if the category doesn't match predefined ones
-            const categoryClass = ['groceries', 'utilities', 'rent', 'transportation', 'entertainment']
-                                .includes(expense.category.toLowerCase()) 
-                                ? expense.category.toLowerCase() 
-                                : 'other';
-            
-            expenseElement.innerHTML = `
-                <div class="expense-icon ${categoryClass}"></div>
-                <div class="expense-details">
-                    <h4>${displayCategory}</h4>
-                    <p class="date">${formatDate(expense.date)}</p>
-                </div>
-                <p class="amount">${formatter.format(expense.amount)}</p>
-            `;
-            
-            return expenseElement;
-        }
-
-        function formatDate(date) {
-            const now = new Date();
-            const expenseDate = new Date(date);
-            
-            if (isSameDay(now, expenseDate)) {
-                return 'Today';
-            } else if (isSameDay(new Date(now - 86400000), expenseDate)) {
-                return 'Yesterday';
-            } else {
-                return expenseDate.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric'
-                });
-            }
-        }
-
-        function isSameDay(d1, d2) {
-            return d1.getFullYear() === d2.getFullYear() &&
-                d1.getMonth() === d2.getMonth() &&
-                d1.getDate() === d2.getDate();
-        }
-
-        // Initialization
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM fully loaded');
-            
-            // Reset example values
-            updateTotalSpent(0);
-            updateBudgetDisplay(2500);
-            
-            // Set today's date as default for expense form
-            const expenseDateInput = document.getElementById('expense-date');
-            if (expenseDateInput) {
-                expenseDateInput.valueAsDate = new Date();
-            }
-            
-            // Clear any example expenses
-            expenseList.innerHTML = '';
-            
-            // Initialize charts
-            initializeCharts();
-        });
-
-        // Chart initialization
-        function initializeCharts() {
-            // Category chart
-            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-            new Chart(categoryCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Groceries', 'Utilities', 'Rent', 'Transportation', 'Entertainment', 'Other'],
-                    datasets: [{
-                        data: [0, 0, 0, 0, 0, 0],
-                        backgroundColor: [
-                            '#e3f2fd', '#f3e5f5', '#e8f5e9', 
-                            '#fff3e0', '#fce4ec', '#f5f5f5'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                        }
-                    }
-                }
-            });
-
-            // Trend chart
-            const trendCtx = document.getElementById('trendChart').getContext('2d');
-            new Chart(trendCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'Daily Spending',
-                        data: [0, 0, 0, 0, 0, 0, 0],
-                        borderColor: '#000',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-    </script>
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Main Application Script -->
+    <script src="js/main.js" type="module"></script>
 </body>
 </html> 

@@ -20,7 +20,7 @@ body {
 
 /* Dashboard Layout */
 .dashboard-section {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .section-header {
@@ -293,6 +293,10 @@ body {
         grid-column: 1 / -1;
         text-align: right;
     }
+
+    .dashboard-flex-section {
+        flex-direction: column;
+    }
 }
 
 /* Utility Classes */
@@ -303,20 +307,19 @@ body {
 /* Authentication Styles */
 #auth-section {
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     min-height: 100vh;
-    padding: 1rem;
     background-color: #f5f5f5;
 }
 
 .login-container {
     background-color: white;
-    padding: 2.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
 }
 
 .login-header {
@@ -325,61 +328,33 @@ body {
 }
 
 .login-header h1 {
-    color: #000;
     font-size: 1.75rem;
     margin-bottom: 0.5rem;
+    color: #1a1a1a;
 }
 
 .login-header p {
     color: #666;
-    font-size: 0.875rem;
+    font-size: 0.95rem;
 }
 
-/* Vertical Form Styles */
 .vertical-form {
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.form-group label {
-    color: #333;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.form-group input {
-    padding: 0.75rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    font-size: 1rem;
-    transition: all 0.2s ease;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: #000;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
 }
 
 .login-button {
-    width: 100%;
-    padding: 0.75rem;
     background-color: #000;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
+    padding: 0.75rem;
     font-size: 1rem;
-    font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s;
-    margin-top: 0.5rem;
+    width: 100%;
 }
 
 .login-button:hover {
@@ -387,25 +362,22 @@ body {
 }
 
 .links {
-    margin-top: 1.5rem;
     text-align: center;
     font-size: 0.875rem;
+    color: #666;
 }
 
 .links a {
     color: #000;
     text-decoration: none;
-    margin: 0 0.5rem;
 }
 
 .links a:hover {
     text-decoration: underline;
 }
 
-@media (max-width: 480px) {
-    .login-container {
-        padding: 1.5rem;
-    }
+.hidden {
+    display: none;
 }
 
 /* Main App Styles */
@@ -413,20 +385,30 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+header h1 {
+    font-size: 1.75rem;
+    color: #1a1a1a;
+    margin: 0;
 }
 
 #logout-btn {
     padding: 0.5rem 1rem;
-    background-color: #e53e3e;
-    color: white;
-    border: none;
-    border-radius: 5px;
+    background-color: transparent;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
     cursor: pointer;
+    font-size: 0.875rem;
+    color: #666;
+    transition: all 0.2s;
 }
 
 #logout-btn:hover {
-    background-color: #c53030;
+    background-color: #f5f5f5;
+    border-color: #666;
+    color: #333;
 }
 
 /* Budget Display */
@@ -477,7 +459,9 @@ button:hover {
 
 /* Expense List */
 #expense-list {
-    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .expense-item {
@@ -506,7 +490,7 @@ button:hover {
 }
 
 #expense-analytics-section {
-    margin-top: 2rem;
+    margin-top: 1rem;
 }
 
 /* Responsive Design */
@@ -694,4 +678,118 @@ body.app-active {
 .input-with-prefix input {
     padding-left: 1.75rem !important;
     width: 100%;
+}
+
+/* Two-column flex layout */
+.dashboard-flex-section {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.half-width {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.half-width .card {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.expense-list-card {
+    height: 100%;
+    min-height: 250px;
+    max-height: none;
+    overflow-y: auto;
+}
+
+#expense-form {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Empty state */
+.empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    flex-grow: 1;
+    text-align: center;
+    color: #999;
+    font-size: 0.95rem;
+    padding: 1.5rem;
+}
+
+/* Updated form layout */
+.form-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex-grow: 1;
+}
+
+.form-submit {
+    margin-top: auto;
+    padding-top: 1rem;
+}
+
+/* Google Sign-in Button */
+.google-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 10px 16px;
+    background-color: white;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #3c4043;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.google-button:hover {
+    background-color: #f7f8f8;
+}
+
+.google-button img {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+}
+
+.login-subtext {
+    text-align: center;
+    color: #5f6368;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+/* Or Divider */
+.or-divider {
+    display: flex;
+    align-items: center;
+    margin: 16px 0;
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #dadce0;
+}
+
+.or-divider span {
+    padding: 0 10px;
+    color: #5f6368;
+    font-size: 12px;
 } 
