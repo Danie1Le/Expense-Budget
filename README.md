@@ -76,27 +76,3 @@ npm start
 ```
 
 3. Open your browser to `http://localhost:3000`
-
-## Deployment
-
-This application can be deployed to Firebase Hosting:
-
-1. Install Firebase CLI:
-```bash
-npm install -g firebase-tools
-```
-
-2. Login to Firebase:
-```bash
-firebase login
-```
-
-3. Initialize Firebase Hosting:
-```bash
-firebase init hosting
-```
-
-4. Deploy to Firebase:
-```bash
-firebase deploy
-``` 

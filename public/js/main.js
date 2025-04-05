@@ -14,12 +14,12 @@ import {
     updateDoc,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-import { initializeAnalytics, updateCharts } from './analytics.js';
+import { initializeAnalytics, setupTimeframeListeners, updateCharts } from './analytics.js';
 import { auth, db } from './firebase-config.js';
 
 // Global variables for current user and data
 let currentUser = null;
-let userExpenses = [];
+window.userExpenses = []; // Make accessible to other scripts
 let userBudget = 2500; // Default budget amount
 
 // Check if the user is logged in
@@ -66,7 +66,7 @@ async function loadUserData() {
         const q = query(expensesRef, orderBy("date", "desc"));
         
         onSnapshot(q, (snapshot) => {
-            userExpenses = [];
+            window.userExpenses = [];
             expenseList.innerHTML = '';
             
             if (snapshot.empty) {
@@ -81,7 +81,7 @@ async function loadUserData() {
                 
                 snapshot.forEach(doc => {
                     const expense = { id: doc.id, ...doc.data() };
-                    userExpenses.push(expense);
+                    window.userExpenses.push(expense);
                     
                     // Add to total
                     totalSpent += expense.amount;
@@ -95,7 +95,7 @@ async function loadUserData() {
                 updateTotalSpent(totalSpent);
                 
                 // Update charts with current expense data
-                updateCharts(userExpenses);
+                updateCharts(window.userExpenses);
             }
         });
     } catch (error) {
@@ -295,6 +295,14 @@ expenseForm.addEventListener('submit', async function(e) {
         const currentTotal = parseFloat(totalSpentSpan.textContent.replace(/[^0-9.-]+/g, '')) || 0;
         const newTotal = currentTotal + amount;
         updateTotalSpent(newTotal);
+        
+        // Add to userExpenses array for offline mode
+        // Generate a temporary ID for the expense
+        expense.id = 'temp_' + Date.now();
+        window.userExpenses.push(expense);
+        
+        // Update analytics charts with new expense data
+        updateCharts(window.userExpenses);
     }
     
     // Clear form
@@ -340,6 +348,12 @@ resetExpensesBtn.addEventListener('click', async function() {
                 
                 // Update budget rule display with zero spent
                 updateBudgetRuleDisplay(userBudget, 0);
+                
+                // Clear the userExpenses array
+                window.userExpenses = [];
+                
+                // Update analytics charts with empty data
+                updateCharts([]);
             } else {
                 // For offline demo
                 expenseList.innerHTML = '';
@@ -356,6 +370,12 @@ resetExpensesBtn.addEventListener('click', async function() {
                 
                 // Update budget rule display with zero spent
                 updateBudgetRuleDisplay(userBudget, 0);
+                
+                // Clear the userExpenses array
+                window.userExpenses = [];
+                
+                // Update analytics charts with empty data
+                updateCharts([]);
             }
             
             // Show success message temporarily
@@ -413,6 +433,12 @@ function updateBudgetDisplay(budgetAmount) {
 
     // Update 50/30/20 rule
     updateBudgetRuleDisplay(budgetAmount, totalSpent);
+    
+    // When budget changes, it's good to refresh the analytics as well
+    // (some visualizations might be affected by budget changes)
+    if (window.userExpenses.length > 0) {
+        updateCharts(window.userExpenses);
+    }
 }
 
 function updateTotalSpent(total) {
@@ -555,8 +581,12 @@ function createExpenseElement(expense) {
         <div class="expense-amount-container">
             <p class="amount">${formatter.format(expense.amount)}</p>
             <div class="expense-actions">
-                <button class="icon-button edit-expense" title="Edit expense">Edit</button>
-                <button class="icon-button delete-expense" title="Delete expense">Delete</button>
+                <button class="icon-button edit-expense" title="Edit expense">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-button delete-expense" title="Delete expense">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </div>
     `;
@@ -628,6 +658,18 @@ async function editExpense(expense, expenseElement) {
             
             // Update the total spent
             updateTotalSpent(updatedTotal);
+            
+            // Also update the expense in the userExpenses array
+            const index = window.userExpenses.findIndex(e => 
+                e.id === expense.id || 
+                (e.date === expense.date && e.category === expense.category)
+            );
+            
+            if (index !== -1) {
+                window.userExpenses[index].amount = parsedAmount;
+                // Update analytics charts with modified expense data
+                updateCharts(window.userExpenses);
+            }
         }
     } catch (error) {
         console.error("Error updating expense:", error);
@@ -668,6 +710,18 @@ async function deleteExpense(expense, expenseElement) {
             
             // Update the total spent
             updateTotalSpent(updatedTotal);
+            
+            // Remove expense from userExpenses array
+            const index = window.userExpenses.findIndex(e => 
+                e.id === expense.id || 
+                (e.date === expense.date && e.category === expense.category)
+            );
+            
+            if (index !== -1) {
+                window.userExpenses.splice(index, 1);
+                // Update analytics charts with updated expense data
+                updateCharts(window.userExpenses);
+            }
             
             // Show empty state if no expenses left
             if (expenseList.children.length === 0) {
@@ -779,4 +833,126 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize analytics instead of charts
     initializeAnalytics();
-}); 
+    
+    // Initialize time frame selection listeners with empty expense array initially
+    setupTimeframeListeners([]);
+});
+
+// Function to update user expenses from Firestore
+async function updateUserExpenses() {
+    try {
+        loadingEl.style.display = 'block';
+        
+        // Get current user
+        const user = auth.currentUser;
+        if (!user) {
+            console.log('No user logged in, showing demo data');
+            updateOfflineDemoUI();
+            return;
+        }
+        
+        // Get expenses from Firestore
+        const expensesRef = collection(db, 'users', user.uid, 'expenses');
+        const querySnapshot = await getDocs(expensesRef);
+        
+        // Clear existing expenses
+        window.userExpenses = [];
+        expenseListEl.innerHTML = '';
+        
+        // Process expenses
+        if (querySnapshot.empty) {
+            console.log('No expenses found');
+            showEmptyState();
+        } else {
+            hideEmptyState();
+            
+            querySnapshot.forEach((doc) => {
+                const expense = {
+                    id: doc.id,
+                    ...doc.data()
+                };
+                window.userExpenses.push(expense);
+                addExpenseToUI(expense);
+            });
+            
+            console.log(`Loaded ${window.userExpenses.length} expenses`);
+        }
+        
+        // Update the charts with the expenses data
+        updateCharts(window.userExpenses);
+        
+        // Update timeframe listeners with the current expenses
+        setupTimeframeListeners(window.userExpenses);
+        
+        // Update the total spent
+        updateTotalSpent();
+        
+    } catch (error) {
+        console.error('Error fetching expenses:', error);
+    } finally {
+        loadingEl.style.display = 'none';
+    }
+}
+
+// Function to update the UI for offline demo mode
+function updateOfflineDemoUI() {
+    console.log('Setting up offline demo UI');
+    
+    // Hide loading indicator if it exists
+    const loadingEl = document.getElementById('loading');
+    if (loadingEl) {
+        loadingEl.style.display = 'none';
+    }
+    
+    // Clear any existing expenses in the UI
+    const expenseListEl = document.getElementById('expense-list');
+    if (expenseListEl) {
+        expenseListEl.innerHTML = '';
+        
+        // Add empty state message
+        const emptyMessage = document.createElement('div');
+        emptyMessage.id = 'empty-expense-message';
+        emptyMessage.className = 'empty-state';
+        emptyMessage.innerHTML = '<p>This is offline demo mode. Add expenses to see how the app works!</p>';
+        expenseListEl.appendChild(emptyMessage);
+    }
+    
+    // Reset expenses array
+    window.userExpenses = [];
+    
+    // Set default budget for demo
+    userBudget = 2500;
+    updateBudgetDisplay(userBudget);
+    
+    // Update total spent to zero
+    updateTotalSpent(0);
+    
+    // Reset charts for demo mode
+    updateCharts([]);
+    
+    // Setup timeframe listeners with empty expense array
+    setupTimeframeListeners([]);
+    
+    // Show a demo notification
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = 'Demo Mode: Your data will not be saved';
+    notification.style.position = 'fixed';
+    notification.style.bottom = '20px';
+    notification.style.right = '20px';
+    notification.style.backgroundColor = '#ff9800';
+    notification.style.color = 'white';
+    notification.style.padding = '10px 20px';
+    notification.style.borderRadius = '4px';
+    notification.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+    notification.style.zIndex = '1000';
+    
+    document.body.appendChild(notification);
+    
+    // Remove the notification after 5 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+    
+    console.log('Offline demo UI setup complete');
+} 

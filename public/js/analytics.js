@@ -9,16 +9,29 @@ let currentTimeRange = 'week';
 
 // Initialize the analytics functionality
 export function initializeAnalytics() {
+    console.log('Initializing analytics');
+    
     // Initialize charts for the first time
     createCharts();
     
     // Add event listeners to tab buttons
     setupTabButtons();
+    
+    // If we already have expense data available, update charts
+    if (window.userExpenses && window.userExpenses.length > 0) {
+        console.log(`Initializing charts with ${window.userExpenses.length} existing expenses`);
+        updateCharts(window.userExpenses);
+    } else {
+        console.log('No initial expense data, showing empty charts');
+        resetCharts();
+    }
+    
+    console.log('Analytics initialization complete');
 }
 
 // Set up event listeners for the tab buttons
- function setupTabButtons() {
-    const tabButtons = document.querySelectorAll('.chart-controls .tab-button');
+function setupTabButtons() {
+    const tabButtons = document.querySelectorAll('.time-button');
     
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -28,27 +41,46 @@ export function initializeAnalytics() {
             // Add active class to clicked button
             button.classList.add('active');
             
-            // Update the time range and refresh charts
-            currentTimeRange = button.textContent.toLowerCase();
-            updateCharts();
+            // Update the time range
+            const previousTimeRange = currentTimeRange;
+            currentTimeRange = button.dataset.timeframe;
+            
+            console.log(`Time range changed from ${previousTimeRange} to ${currentTimeRange}`);
+            
+            // Immediately refresh charts with global userExpenses
+            // This is defined in main.js and should be available
+            if (window.userExpenses && window.userExpenses.length > 0) {
+                updateCharts(window.userExpenses);
+            } else {
+                // If there's no global userExpenses, we'll need to reset charts
+                resetCharts();
+                updateSpendingInsights([]);
+            }
         });
     });
 }
 
 // Create the initial charts
 function createCharts() {
+    // Define our standard category colors - exactly match CSS
+    const categoryColors = [
+        '#4CAF50', // Green for Groceries
+        '#2196F3', // Blue for Utilities
+        '#9C27B0', // Purple for Rent
+        '#FF9800', // Orange for Transportation
+        '#E91E63', // Pink for Entertainment
+        '#607D8B'  // Blue Grey for Other
+    ];
+
     // Category chart
     const categoryCtx = document.getElementById('categoryChart').getContext('2d');
     categoryChart = new Chart(categoryCtx, {
         type: 'doughnut',
         data: {
-            labels:['Groceries', 'Utilities', 'Rent', 'Transportation', 'Entertainment', 'Other'],
+            labels: ['Groceries', 'Utilities', 'Rent', 'Transportation', 'Entertainment', 'Other'],
             datasets: [{
                 data: [0, 0, 0, 0, 0, 0],
-                backgroundColor: [
-                    '#e3f2fd', '#f3e5f5', '#e8f5e9', 
-                    '#fff3e0', '#fce4ec', '#f5f5f5'
-                 ],
+                backgroundColor: categoryColors,
                 borderWidth: 1
             }]
         },
@@ -57,12 +89,23 @@ function createCharts() {
             plugins: {
                 legend: {
                     position: 'right',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                            return `${label}: $${value.toFixed(2)} (${percentage}%)`;
+                        }
+                    }
                 }
             }
         }
     });
 
-     // Trend chart
+    // Trend chart
     const trendCtx = document.getElementById('trendChart').getContext('2d');
     trendChart = new Chart(trendCtx, {
         type: 'line',
@@ -71,34 +114,123 @@ function createCharts() {
             datasets: [{
                 label: 'Daily Spending',
                 data: [0, 0, 0, 0, 0, 0, 0],
-                borderColor: '#000',
-                tension: 0.1
+                borderColor: '#2196F3',
+                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                tension: 0.3,
+                fill: true
             }]
         },
         options: {
             responsive: true,
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `$${context.raw.toFixed(2)}`;
+                        }
+                    }
                 }
             }
         }
     });
 }
 
-// Update charts with expense data
+// Update all charts with new data
 export function updateCharts(expenses = []) {
-    if (expenses.length === 0) return;
+    console.log(`Updating charts with ${expenses ? expenses.length : 0} expenses`);
     
-    updateCategoryChart(expenses);
-    updateTrendChart(expenses);
-    updateSpendingInsights(expenses);
+    // If there are no expenses, reset charts and return
+    if (!expenses || expenses.length === 0) {
+        console.log('No expenses data, resetting charts');
+        resetCharts();
+        updateSpendingInsights([]); // Update insights with empty data
+        return;
+    }
+    
+    // Filter expenses by the current time range
+    const filteredExpenses = filterExpensesByTimeRange(expenses);
+    console.log(`Filtered to ${filteredExpenses.length} expenses in ${currentTimeRange} time range`);
+    
+    // If there are no expenses in the selected time range, reset charts
+    if (filteredExpenses.length === 0) {
+        console.log('No expenses in current time range, resetting charts');
+        resetCharts();
+        updateSpendingInsights([]); // Update insights with empty data
+        return;
+    }
+    
+    // Update the category distribution chart
+    updateCategoryChart(filteredExpenses);
+    
+    // Update the spending trend chart
+    updateTrendChart(filteredExpenses);
+    
+    // Update spending insights
+    updateSpendingInsights(filteredExpenses);
+    
+    console.log('Charts update completed');
 }
 
-//Update the category chart with expense data
+// Reset charts to show empty data state
+export function resetCharts() {
+    console.log('Resetting charts to empty state');
+    
+    // Reset category chart
+    if (categoryChart) {
+        categoryChart.data.labels = ['No Data'];
+        categoryChart.data.datasets[0].data = [0];
+        categoryChart.data.datasets[0].backgroundColor = ['#e0e0e0'];
+        categoryChart.update();
+    }
+    
+    // Reset trend chart 
+    if (trendChart) {
+        const labels = [];
+        
+        // Generate appropriate empty labels based on current time range
+        if (currentTimeRange === 'week') {
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            labels.push(...days);
+        } else if (currentTimeRange === 'month') {
+            // Generate labels for days 1-30
+            for (let i = 1; i <= 30; i++) {
+                labels.push(i.toString());
+            }
+        } else { // year
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            labels.push(...months);
+        }
+        
+        // Update chart with empty data
+        trendChart.data.labels = labels;
+        trendChart.data.datasets[0].data = Array(labels.length).fill(0);
+        trendChart.update();
+    }
+    
+    console.log('Charts reset completed');
+}
+
+// Update the category chart with expense data
 function updateCategoryChart(expenses) {
-    // Filter expenses by selected time range
-    const filteredExpenses = filterExpensesByTimeRange(expenses);
+    // Define consistent colors for each category - exactly match CSS
+    const categoryColors = {
+        'groceries': '#4CAF50',     // Green
+        'utilities': '#2196F3',     // Blue
+        'rent': '#9C27B0',          // Purple
+        'transportation': '#FF9800', // Orange
+        'entertainment': '#E91E63',  // Pink
+        'other': '#607D8B'          // Blue Grey
+    };
     
     // Calculate totals by category
     const categoryTotals = {
@@ -111,7 +243,7 @@ function updateCategoryChart(expenses) {
     };
     
     // Sum expenses by category
-    filteredExpenses.forEach(expense => {
+    expenses.forEach(expense => {
         const category = expense.category.toLowerCase();
         if (categoryTotals.hasOwnProperty(category)) {
             categoryTotals[category] += expense.amount;
@@ -120,18 +252,39 @@ function updateCategoryChart(expenses) {
         }
     });
     
-    // Update chart data
-    categoryChart.data.datasets[0].data = [
-        categoryTotals.groceries,
-        categoryTotals.utilities,
-        categoryTotals.rent,
-        categoryTotals.transportation,
-        categoryTotals.entertainment,
-        categoryTotals.other
-    ];
+    // Filter out categories with zero amounts
+    const nonZeroCategories = Object.entries(categoryTotals)
+        .filter(([_, amount]) => amount > 0)
+        .map(([category, amount]) => ({ category, amount }));
+    
+    // If no categories have data, show a placeholder
+    if (nonZeroCategories.length === 0) {
+        categoryChart.data.labels = ['No Data'];
+        categoryChart.data.datasets[0].data = [1];
+        categoryChart.data.datasets[0].backgroundColor = ['#e0e0e0'];
+    } else {
+        // Prepare data for the chart
+        const labels = nonZeroCategories.map(item => {
+            // Capitalize first letter of category
+            return item.category.charAt(0).toUpperCase() + item.category.slice(1);
+        });
+        
+        const data = nonZeroCategories.map(item => item.amount);
+        
+        const backgroundColor = nonZeroCategories.map(item => 
+            categoryColors[item.category]
+        );
+        
+        // Update chart data
+        categoryChart.data.labels = labels;
+        categoryChart.data.datasets[0].data = data;
+        categoryChart.data.datasets[0].backgroundColor = backgroundColor;
+    }
     
     // Update chart
     categoryChart.update();
+    
+    console.log('Category chart updated with data:', categoryChart.data);
 }
 
 // Update the trend chart with expense data
@@ -311,10 +464,33 @@ function formatDateToYYYYMMDD(date) {
 
 // Get insights about spending patterns
 export function getSpendingInsights(expenses = []) {
-    if (expenses.length === 0) return null;
+    console.log('Calculating spending insights for', expenses.length, 'expenses');
+    
+    if (!expenses || expenses.length === 0) {
+        console.log('No expenses data for insights');
+        return {
+            topCategory: 'None',
+            topCategoryAmount: 0,
+            topCategoryPercentage: 0,
+            dailyAverage: 0,
+            totalSpent: 0
+        };
+    }
     
     // Filter expenses by selected time range
     const filteredExpenses = filterExpensesByTimeRange(expenses);
+    console.log('Filtered to', filteredExpenses.length, 'expenses in the', currentTimeRange, 'time range');
+    
+    // If no expenses in the current time range
+    if (filteredExpenses.length === 0) {
+        return {
+            topCategory: 'None',
+            topCategoryAmount: 0,
+            topCategoryPercentage: 0,
+            dailyAverage: 0,
+            totalSpent: 0
+        };
+    }
     
     // Calculate totals by category
     const categoryTotals = {
@@ -331,8 +507,7 @@ export function getSpendingInsights(expenses = []) {
         const category = expense.category.toLowerCase();
         if (categoryTotals.hasOwnProperty(category)) {
             categoryTotals[category] += expense.amount;
-        } 
-        else {
+        } else {
             categoryTotals.other += expense.amount;
         }
     });
@@ -351,52 +526,139 @@ export function getSpendingInsights(expenses = []) {
         }
     }
     
+    // If no spending in any category
+    if (topAmount === 0) {
+        topCategory = 'None';
+    }
+    
     // Calculate daily average (use exact number of days for accuracy)
     let daysInRange;
     
     if (currentTimeRange === 'week') {
         daysInRange = 7;
-    }
-     else if (currentTimeRange === 'month') {
+    } else if (currentTimeRange === 'month') {
         // For a more accurate calculation, we could determine the actual days in the time range
         // But for simplicity, using 30 days for a month
         daysInRange = 30;
-    }
-    else { // year
+    } else { // year
         // Using 365 days for simplicity
         daysInRange = 365;
     }
     
     const dailyAverage = totalSpent / daysInRange;
     
-    return {
-        topCategory: topCategory.charAt(0).toUpperCase() + topCategory.slice(1),
+    const result = {
+        topCategory: topCategory === 'None' ? 'None' : topCategory.charAt(0).toUpperCase() + topCategory.slice(1),
         topCategoryAmount: topAmount,
         topCategoryPercentage: totalSpent > 0 ? (topAmount / totalSpent) * 100 : 0,
         dailyAverage: dailyAverage,
         totalSpent: totalSpent
     };
+    
+    console.log('Spending insights:', result);
+    return result;
 }
 
-// Update the spending insights section with data
-function updateSpendingInsights(expenses) {
-    // Get insights data
+// Update the spending insights in the UI
+export function updateSpendingInsights(expenses = []) {
     const insights = getSpendingInsights(expenses);
-    if (!insights) return;
+    console.log('Updating spending insights UI with:', insights);
     
-    // Format currency
-    const formatter = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
+    const topCategoryEl = document.getElementById('top-category');
+    const dailyAvgEl = document.getElementById('daily-average');
+    const periodTotalEl = document.getElementById('period-total');
+    
+    if (!topCategoryEl || !dailyAvgEl || !periodTotalEl) {
+        console.warn('Some spending insights elements not found in the DOM');
+        return;
+    }
+    
+    if (insights) {
+        // Format the values
+        const topCategoryText = insights.topCategory === 'None' ? 
+            'No data yet' : 
+            `${insights.topCategory} ($${insights.topCategoryAmount.toFixed(2)})`;
+        const dailyAvgText = `$${insights.dailyAverage.toFixed(2)}`;
+        const totalSpentText = `$${insights.totalSpent.toFixed(2)}`;
+        
+        // Update the UI
+        topCategoryEl.textContent = topCategoryText;
+        dailyAvgEl.textContent = dailyAvgText;
+        periodTotalEl.textContent = totalSpentText;
+        
+        // Show empty state message if no data
+        const insightsContainer = document.getElementById('spending-insights');
+        if (insightsContainer) {
+            if (insights.totalSpent === 0) {
+                // Add empty state if it doesn't exist
+                if (!document.querySelector('.insights-empty-state')) {
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'insights-empty-state';
+                    emptyState.textContent = 'Add expenses to see spending insights';
+                    emptyState.style.textAlign = 'center';
+                    emptyState.style.padding = '20px 0';
+                    emptyState.style.fontStyle = 'italic';
+                    emptyState.style.color = '#888';
+                    
+                    // Add empty state before or after the insights content
+                    insightsContainer.appendChild(emptyState);
+                    
+                    // Hide the individual insight items
+                    const insightItems = insightsContainer.querySelectorAll('.insight-item');
+                    insightItems.forEach(item => item.style.display = 'none');
+                }
+            } else {
+                // Show the insights and remove empty state if it exists
+                const emptyState = document.querySelector('.insights-empty-state');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+                
+                // Show the individual insight items
+                const insightItems = insightsContainer.querySelectorAll('.insight-item');
+                insightItems.forEach(item => item.style.display = 'block');
+            }
+        }
+    } else {
+        console.warn('No insights available to update UI');
+    }
+}
+
+// Set up event listeners for timeframe selection
+export function setupTimeframeListeners(initialExpenses = []) {
+    console.log('Setting up timeframe listeners');
+    
+    // Store initial expenses in window.userExpenses if not already set
+    if (!window.userExpenses) {
+        window.userExpenses = initialExpenses;
+    }
+    
+    const timeButtons = document.querySelectorAll('.time-button');
+    
+    timeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            timeButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Update current time range
+            const newTimeRange = this.dataset.timeframe;
+            console.log(`Changing time range from ${currentTimeRange} to ${newTimeRange}`);
+            currentTimeRange = newTimeRange;
+            
+            // Always use the global window.userExpenses which is updated in real-time
+            if (window.userExpenses && window.userExpenses.length > 0) {
+                console.log(`Updating charts for new time range: ${newTimeRange} with ${window.userExpenses.length} expenses`);
+                updateCharts(window.userExpenses);
+            } else {
+                console.log(`Resetting charts for new time range: ${newTimeRange} (no expenses)`);
+                resetCharts();
+                updateSpendingInsights([]);
+            }
+        });
     });
     
-    // Update DOM elements
-    document.getElementById('top-category').textContent = 
-        `${insights.topCategory} (${formatter.format(insights.topCategoryAmount)})`;
-    
-    document.getElementById('daily-average').textContent = 
-        formatter.format(insights.dailyAverage);
-    
-    document.getElementById('period-total').textContent = 
-        formatter.format(insights.totalSpent);
+    console.log('Timeframe listeners setup completed');
 } 

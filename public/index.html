@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Budget Tracker</title>
     <link rel="stylesheet" href="css/main.css">
+    <!-- Add Font Awesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <!-- Add Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -179,9 +181,9 @@
                 <div class="section-header">
                     <h2>Expense Analytics</h2>
                     <div class="chart-controls">
-                        <button class="tab-button active">Week</button>
-                        <button class="tab-button">Month</button>
-                        <button class="tab-button">Year</button>
+                        <button class="time-button active" data-timeframe="week">Week</button>
+                        <button class="time-button" data-timeframe="month">Month</button>
+                        <button class="time-button" data-timeframe="year">Year</button>
                     </div>
                 </div>
                 <div class="analytics-container">
