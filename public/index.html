@@ -184,14 +184,35 @@
                         <button class="tab-button">Year</button>
                     </div>
                 </div>
-                <div class="charts-container">
-                    <div class="card chart-card">
-                        <h3>Spending by Category</h3>
-                        <canvas id="categoryChart"></canvas>
+                <div class="analytics-container">
+                    <div class="charts-container">
+                        <div class="card chart-card">
+                            <h3>Spending by Category</h3>
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                        <div class="card chart-card">
+                            <h3>Spending Trend</h3>
+                            <canvas id="trendChart"></canvas>
+                        </div>
                     </div>
-                    <div class="card chart-card">
-                        <h3>Spending Trend</h3>
-                        <canvas id="trendChart"></canvas>
+                    
+                    <!-- New Spending Insights Section -->
+                    <div class="card insights-card">
+                        <h3>Spending Insights</h3>
+                        <div id="spending-insights">
+                            <div class="insight-item">
+                                <h4>Top Category</h4>
+                                <p id="top-category">No data yet</p>
+                            </div>
+                            <div class="insight-item">
+                                <h4>Daily Average</h4>
+                                <p id="daily-average">$0</p>
+                            </div>
+                            <div class="insight-item">
+                                <h4>Total Spent This Period</h4>
+                                <p id="period-total">$0</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>

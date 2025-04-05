@@ -14,6 +14,7 @@ import {
     updateDoc,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { initializeAnalytics, updateCharts } from './analytics.js';
 import { auth, db } from './firebase-config.js';
 
 // Global variables for current user and data
@@ -92,6 +93,9 @@ async function loadUserData() {
                 
                 // Update totals
                 updateTotalSpent(totalSpent);
+                
+                // Update charts with current expense data
+                updateCharts(userExpenses);
             }
         });
     } catch (error) {
@@ -238,7 +242,23 @@ expenseForm.addEventListener('submit', async function(e) {
     
     const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
     const category = document.getElementById('expense-category').value;
-    const date = document.getElementById('expense-date').value || new Date().toISOString().split('T')[0];
+    const dateInputValue = document.getElementById('expense-date').value;
+    
+    console.log('Date input value:', dateInputValue);
+    
+    // Always use YYYY-MM-DD format directly from the input
+    let date = dateInputValue;
+    
+    // If no date provided, use today's date in YYYY-MM-DD format
+    if (!date) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        date = `${year}-${month}-${day}`;
+    }
+    
+    console.log('Formatted date for storage:', date);
     
     if (!amount || !category) {
         alert('Please fill in all required fields');
@@ -252,6 +272,8 @@ expenseForm.addEventListener('submit', async function(e) {
         date, 
         createdAt: new Date() 
     };
+    
+    console.log('Creating expense with date:', expense.date);
     
     // Add to Firestore if user is logged in
     if (currentUser) {
@@ -277,7 +299,16 @@ expenseForm.addEventListener('submit', async function(e) {
     
     // Clear form
     expenseForm.reset();
-    document.getElementById('expense-date').valueAsDate = new Date();
+    
+    // Set date input to today
+    try {
+        const today = new Date();
+        const dateInput = document.getElementById('expense-date');
+        dateInput.valueAsDate = today;
+        console.log('Reset date input to:', dateInput.value);
+    } catch (error) {
+        console.error('Error setting date input:', error);
+    }
 });
 
 // Reset Expenses
@@ -654,23 +685,63 @@ async function deleteExpense(expense, expenseElement) {
 }
 
 function formatDate(date) {
-    // Make sure we're comparing dates in the local timezone
+    console.log('Original date string:', date);
+    console.log('Current date/time:', new Date().toString());
+    
+    // handle ISO date strings (YYYY-MM-DD) without creating a Date object
+    if (date && typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        
+        // Yesterday is 1 day before
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+        
+        console.log('Comparing with today:', today);
+        console.log('Comparing with yesterday:', yesterdayStr);
+        
+        if (date === today) {
+            console.log('Exact match with today string');
+            return 'Today';
+        } else if (date === yesterdayStr) {
+            console.log('Exact match with yesterday string');
+            return 'Yesterday';
+        } else {
+            // Format the date as "Mon DD" without creating a Date object
+            const [year, month, day] = date.split('-');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            // Month is 0-indexed in JavaScript
+            return `${months[parseInt(month, 10) - 1]} ${parseInt(day, 10)}`;
+        }
+    }
+    
+    // Fall back to the existing method for non-standard date formats
     const now = new Date();
     const expenseDate = new Date(date);
     
-    // Reset time parts to ensure we compare only dates
+    console.log('Parsed expense date:', expenseDate.toString());
+    
+     // Reset time parts to ensure we compare only dates
     const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const compareDate = new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate());
+    
+    console.log('Today date (no time):', todayDate.toString());
+    console.log('Compare date (no time):', compareDate.toString());
     
     // Calculate the difference in days
     const diffTime = todayDate.getTime() - compareDate.getTime();
     const diffDays = diffTime / (1000 * 60 * 60 * 24);
     
+    console.log('Difference in days:', diffDays);
+    
     if (diffDays === 0) {
         return 'Today';
-    } else if (diffDays === 1) {
+    } 
+    else if (diffDays === 1) {
         return 'Yesterday';
-    } else {
+    } 
+    else {
         return expenseDate.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric'
@@ -706,57 +777,6 @@ document.addEventListener('DOMContentLoaded', function() {
     emptyMessage.innerHTML = '<p>No expenses yet. Add your first expense to get started!</p>';
     expenseList.appendChild(emptyMessage);
     
-    // Initialize charts
-    initializeCharts();
-});
-
-// Chart initialization
-function initializeCharts() {
-    // Category chart
-    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-    new Chart(categoryCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Groceries', 'Utilities', 'Rent', 'Transportation', 'Entertainment', 'Other'],
-            datasets: [{
-                data: [0, 0, 0, 0, 0, 0],
-                backgroundColor: [
-                    '#e3f2fd', '#f3e5f5', '#e8f5e9', 
-                    '#fff3e0', '#fce4ec', '#f5f5f5'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'right',
-                }
-            }
-        }
-    });
-
-    // Trend chart
-    const trendCtx = document.getElementById('trendChart').getContext('2d');
-    new Chart(trendCtx, {
-        type: 'line',
-        data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Daily Spending',
-                data: [0, 0, 0, 0, 0, 0, 0],
-                borderColor: '#000',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-} 
+    // Initialize analytics instead of charts
+    initializeAnalytics();
+}); 
