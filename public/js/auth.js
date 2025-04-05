@@ -1,10 +1,11 @@
 import {
     createUserWithEmailAndPassword,
     GoogleAuthProvider,
+    onAuthStateChanged,
     signInWithEmailAndPassword,
     signInWithPopup,
     signOut
-} from "https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { auth } from './firebase-config.js';
 
 // DOM Elements
@@ -62,7 +63,8 @@ loginForm.addEventListener('submit', async (e) => {
         await signInWithEmailAndPassword(auth, email, password);
         loginForm.reset();
     } catch (error) {
-        alert(error.message);
+        console.error('Login error:', error);
+        alert('Login failed: ' + error.message);
     }
 });
 
@@ -81,21 +83,24 @@ logoutBtn.addEventListener('click', async () => {
     try {
         await signOut(auth);
     } catch (error) {
-        alert(error.message);
+        console.error('Logout error:', error);
     }
 });
 
-// Comment out or remove the auth state observer
-auth.onAuthStateChanged((user) => {
+// Auth State Change
+onAuthStateChanged(auth, (user) => {
     if (user) {
-        authSection.classList.add('hidden');
-        appSection.classList.remove('hidden');
+        // User is signed in
+        if (authSection) authSection.classList.add('hidden');
+        if (appSection) appSection.classList.remove('hidden');
+        console.log('User signed in:', user.uid);
     } else {
-        appSection.classList.add('hidden');
-        authSection.classList.remove('hidden');
+        // User is signed out
+        if (authSection) authSection.classList.remove('hidden');
+        if (appSection) appSection.classList.add('hidden');
+        console.log('User signed out');
     }
 });
-
 
 // Instead, ensure the app is always visible
 document.getElementById('auth-section').classList.add('hidden');

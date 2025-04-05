@@ -1,8 +1,10 @@
 {
-  "name": "expense-budget",
+  "name": "expense-budget-firebase",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Budget tracker app with Firebase",
+  "main": "public/index.html",
   "scripts": {
+    "start": "http-server public",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -16,8 +18,10 @@
     "url": "https://github.com/Danie1Le/Expense-Budget/issues"
   },
   "homepage": "https://github.com/Danie1Le/Expense-Budget#readme",
-  "description": "",
   "dependencies": {
-    "firebase": "^11.3.1"
+    "firebase": "^9.22.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
   }
 }
