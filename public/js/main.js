@@ -654,12 +654,21 @@ async function deleteExpense(expense, expenseElement) {
 }
 
 function formatDate(date) {
+    // Make sure we're comparing dates in the local timezone
     const now = new Date();
     const expenseDate = new Date(date);
     
-    if (isSameDay(now, expenseDate)) {
+    // Reset time parts to ensure we compare only dates
+    const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const compareDate = new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate());
+    
+    // Calculate the difference in days
+    const diffTime = todayDate.getTime() - compareDate.getTime();
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    
+    if (diffDays === 0) {
         return 'Today';
-    } else if (isSameDay(new Date(now - 86400000), expenseDate)) {
+    } else if (diffDays === 1) {
         return 'Yesterday';
     } else {
         return expenseDate.toLocaleDateString('en-US', {
