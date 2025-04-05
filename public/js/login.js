@@ -4,8 +4,7 @@ import {
     onAuthStateChanged,
     sendPasswordResetEmail,
     signInWithEmailAndPassword,
-    signInWithPopup,
-    signInWithRedirect
+    signInWithPopup
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 import { auth, db } from './firebase-config.js';
@@ -54,38 +53,28 @@ googleSignInBtn.addEventListener('click', async function() {
             prompt: 'select_account'
         });
         
-        // Check if we're in a local development environment
-        const isLocalhost = window.location.hostname === 'localhost' || 
-                            window.location.hostname === '127.0.0.1';
+        // Always use popup for Google sign in
+        console.log('Using popup for Google sign in');
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
         
-        if (isLocalhost) {
-            // For localhost, use signInWithRedirect instead of popup
-            // This avoids the unauthorized domain error
-            await signInWithRedirect(auth, provider);
-            // The redirect will happen automatically, no need for additional code here
-        } else {
-            // For deployed environments, use popup
-            const result = await signInWithPopup(auth, provider);
-            const user = result.user;
-            
-            // Check if this is a new user
-            const userDocRef = doc(db, "users", user.uid);
-            const userDoc = await getDoc(userDocRef);
-            
-            if (!userDoc.exists()) {
-                // Create user document if it's a new user
-                await setDoc(userDocRef, {
-                    email: user.email,
-                    createdAt: new Date(),
-                    budget: 2500 // Default budget
-                });
-            }
-            
-            console.log('Google login successful');
-            
-            // Redirect to main app - auth state listener will handle the rest
-            window.location.href = 'index.html';
+        // Check if this is a new user
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (!userDoc.exists()) {
+            // Create user document if it's a new user
+            await setDoc(userDocRef, {
+                email: user.email,
+                createdAt: new Date(),
+                budget: 2500 // Default budget
+            });
         }
+        
+        console.log('Google login successful');
+        
+        // Redirect to main app - auth state listener will handle the rest
+        window.location.href = 'index.html';
     } catch (error) {
         console.error('Google login error:', error);
         alert('Google login failed: ' + error.message);

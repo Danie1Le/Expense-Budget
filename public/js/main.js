@@ -3,6 +3,7 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import {
     addDoc,
     collection,
+    deleteDoc,
     doc,
     getDoc,
     getDocs,
@@ -283,22 +284,70 @@ expenseForm.addEventListener('submit', async function(e) {
 resetExpensesBtn.addEventListener('click', async function() {
     console.log('Reset expenses clicked');
     if (confirm('Are you sure you want to reset all expenses?')) {
-        if (currentUser) {
-            // Clear expenses from Firestore
-            await clearExpensesFromFirestore();
-            // UI will be updated via Firestore listener
-        } else {
-            // For offline demo
-            expenseList.innerHTML = '';
+        try {
+            // Show loading state on button
+            const originalText = resetExpensesBtn.textContent;
+            resetExpensesBtn.textContent = 'Resetting...';
+            resetExpensesBtn.disabled = true;
             
-            // Re-add the empty state message
-            const emptyMessage = document.createElement('div');
-            emptyMessage.id = 'empty-expense-message';
-            emptyMessage.className = 'empty-state';
-            emptyMessage.innerHTML = '<p>No expenses yet. Add your first expense to get started!</p>';
-            expenseList.appendChild(emptyMessage);
+            if (currentUser) {
+                // Clear expenses from Firestore
+                await clearExpensesFromFirestore();
+                
+                // But also update UI immediately for better UX
+                expenseList.innerHTML = '';
+                
+                // Re-add the empty state message
+                const emptyMessage = document.createElement('div');
+                emptyMessage.id = 'empty-expense-message';
+                emptyMessage.className = 'empty-state';
+                emptyMessage.innerHTML = '<p>No expenses yet. Add your first expense to get started!</p>';
+                expenseList.appendChild(emptyMessage);
+                
+                // Reset all displayed numbers
+                updateTotalSpent(0);
+                
+                // Update budget rule display with zero spent
+                updateBudgetRuleDisplay(userBudget, 0);
+            } else {
+                // For offline demo
+                expenseList.innerHTML = '';
+                
+                // Re-add the empty state message
+                const emptyMessage = document.createElement('div');
+                emptyMessage.id = 'empty-expense-message';
+                emptyMessage.className = 'empty-state';
+                emptyMessage.innerHTML = '<p>No expenses yet. Add your first expense to get started!</p>';
+                expenseList.appendChild(emptyMessage);
+                
+                // Reset all displayed numbers
+                updateTotalSpent(0);
+                
+                // Update budget rule display with zero spent
+                updateBudgetRuleDisplay(userBudget, 0);
+            }
             
-            updateTotalSpent(0);
+            // Show success message temporarily
+            resetExpensesBtn.textContent = 'Reset Complete!';
+            resetExpensesBtn.classList.add('success-button');
+            
+            // Restore button after a moment
+            setTimeout(() => {
+                resetExpensesBtn.textContent = originalText;
+                resetExpensesBtn.disabled = false;
+                resetExpensesBtn.classList.remove('success-button');
+            }, 2000);
+        } catch (error) {
+            console.error("Error resetting expenses:", error);
+            resetExpensesBtn.textContent = 'Reset Failed';
+            resetExpensesBtn.classList.add('error-button');
+            
+            // Restore button after a moment
+            setTimeout(() => {
+                resetExpensesBtn.textContent = originalText;
+                resetExpensesBtn.disabled = false;
+                resetExpensesBtn.classList.remove('error-button');
+            }, 2000);
         }
     }
 });
@@ -342,28 +391,35 @@ function updateTotalSpent(total) {
         currency: 'USD'
     });
     
+    // Update the displayed total
     totalSpentSpan.textContent = formatter.format(total);
     
+    // Get current budget and calculate remaining
     const currentBudget = parseFloat(currentBudgetSpan.textContent.replace(/[^0-9.-]+/g, '')) || 0;
-    const remaining = currentBudget - total;
+    const remaining = Math.max(currentBudget - total, 0);
     
+    // Update remaining budget display
     remainingBudgetSpan.textContent = formatter.format(remaining);
     
+    // Calculate and update percentages
     if (currentBudget > 0) {
-        const spentPercentage = (total / currentBudget) * 100;
-        const remainingPercentage = (remaining / currentBudget) * 100;
+        const spentPercentage = Math.min((total / currentBudget) * 100, 100).toFixed(1);
+        const remainingPercentage = Math.max(100 - spentPercentage, 0).toFixed(1);
         
+        // Update percentage displays
         document.querySelector('.card:nth-child(2) .subtitle').textContent = 
-            `${spentPercentage.toFixed(1)}% of budget`;
+            `${spentPercentage}% of budget`;
         document.querySelector('.card:nth-child(3) .subtitle').textContent = 
-            `${remainingPercentage.toFixed(1)}% left`;
+            `${remainingPercentage}% left`;
     } else {
         document.querySelector('.card:nth-child(2) .subtitle').textContent = '0% of budget';
         document.querySelector('.card:nth-child(3) .subtitle').textContent = '0% left';
     }
 
-    // Visual indicator for negative budget
-    if (total > currentBudget && currentBudget > 0) {
+    // Visual indicator for negative budget - remove if total is 0
+    if (total === 0) {
+        remainingBudgetSpan.classList.remove('negative');
+    } else if (total > currentBudget && currentBudget > 0) {
         remainingBudgetSpan.classList.add('negative');
     } else {
         remainingBudgetSpan.classList.remove('negative');
@@ -390,35 +446,50 @@ function updateBudgetRuleDisplay(budgetAmount, totalSpent) {
     document.getElementById('wants-amount').textContent = formatter.format(wantsAmount);
     document.getElementById('savings-amount').textContent = formatter.format(savingsAmount);
 
-    // Calculate percentages for progress bars (only if budget > 0)
-    let needsPercentage = 0;
-    let wantsPercentage = 0;
-    let savingsPercentage = 0;
-
-    if (budgetAmount > 0) {
-        // Simplified for demo - just showing overall percentage
-        const percentageSpent = Math.min((totalSpent / budgetAmount) * 100, 100);
-        needsPercentage = percentageSpent;
-        wantsPercentage = percentageSpent;
-        savingsPercentage = percentageSpent;
+    // If total spent is 0, reset all progress bars to 0
+    if (totalSpent === 0) {
+        document.getElementById('needs-progress').style.width = '0%';
+        document.getElementById('wants-progress').style.width = '0%';
+        document.getElementById('savings-progress').style.width = '0%';
+        
+        // Update remaining amounts to show full budget
+        document.getElementById('needs-remaining').textContent = 
+            `${formatter.format(needsAmount)} left to spend`;
+        document.getElementById('wants-remaining').textContent = 
+            `${formatter.format(wantsAmount)} left to spend`;
+        document.getElementById('savings-remaining').textContent = 
+            `${formatter.format(savingsAmount)} left to save`;
+        
+        return;
     }
+
+    // Calculate spent amounts based on the 50/30/20 rule
+    const needsSpent = totalSpent * 0.5;
+    const wantsSpent = totalSpent * 0.3;
+    const savingsSpent = totalSpent * 0.2;
+
+    // Calculate percentages for progress bars (only if allocated amounts > 0)
+    let needsPercentage = needsAmount > 0 ? Math.min((needsSpent / needsAmount) * 100, 100) : 0;
+    let wantsPercentage = wantsAmount > 0 ? Math.min((wantsSpent / wantsAmount) * 100, 100) : 0;
+    let savingsPercentage = savingsAmount > 0 ? Math.min((savingsSpent / savingsAmount) * 100, 100) : 0;
 
     // Update progress bars
     document.getElementById('needs-progress').style.width = `${needsPercentage}%`;
     document.getElementById('wants-progress').style.width = `${wantsPercentage}%`;
     document.getElementById('savings-progress').style.width = `${savingsPercentage}%`;
 
-    // Update remaining amounts
-    const needsSpent = totalSpent * 0.5;
-    const wantsSpent = totalSpent * 0.3;
-    const savingsSpent = totalSpent * 0.2;
+    // Calculate remaining amounts
+    const needsRemaining = Math.max(needsAmount - needsSpent, 0);
+    const wantsRemaining = Math.max(wantsAmount - wantsSpent, 0);
+    const savingsRemaining = Math.max(savingsAmount - savingsSpent, 0);
 
+    // Update remaining amounts text
     document.getElementById('needs-remaining').textContent = 
-        `${formatter.format(Math.max(needsAmount - needsSpent, 0))} left to spend`;
+        `${formatter.format(needsRemaining)} left to spend`;
     document.getElementById('wants-remaining').textContent = 
-        `${formatter.format(Math.max(wantsAmount - wantsSpent, 0))} left to spend`;
+        `${formatter.format(wantsRemaining)} left to spend`;
     document.getElementById('savings-remaining').textContent = 
-        `${formatter.format(Math.max(savingsAmount - savingsSpent, 0))} left to save`;
+        `${formatter.format(savingsRemaining)} left to save`;
 }
 
 function createExpenseElement(expense) {
@@ -450,10 +521,136 @@ function createExpenseElement(expense) {
             <h4>${displayCategory}</h4>
             <p class="date">${formatDate(expense.date)}</p>
         </div>
-        <p class="amount">${formatter.format(expense.amount)}</p>
+        <div class="expense-amount-container">
+            <p class="amount">${formatter.format(expense.amount)}</p>
+            <div class="expense-actions">
+                <button class="icon-button edit-expense" title="Edit expense">Edit</button>
+                <button class="icon-button delete-expense" title="Delete expense">Delete</button>
+            </div>
+        </div>
     `;
     
+    // Store the expense ID if it exists
+    if (expense.id) {
+        expenseElement.dataset.id = expense.id;
+    }
+    
+    // Add event listeners to the buttons
+    const editButton = expenseElement.querySelector('.edit-expense');
+    const deleteButton = expenseElement.querySelector('.delete-expense');
+    
+    editButton.addEventListener('click', () => editExpense(expense, expenseElement));
+    deleteButton.addEventListener('click', () => deleteExpense(expense, expenseElement));
+    
     return expenseElement;
+}
+
+// Edit expense function
+async function editExpense(expense, expenseElement) {
+    // Prompt for new amount
+    const newAmount = prompt('Enter new amount:', expense.amount);
+    
+    // Validate input
+    if (newAmount === null) return; // User cancelled
+    
+    const parsedAmount = parseFloat(newAmount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        alert('Please enter a valid amount');
+        return;
+    }
+    
+    try {
+        // Get current total spent
+        const currentTotal = parseFloat(totalSpentSpan.textContent.replace(/[^0-9.-]+/g, '')) || 0;
+        
+        // Simple calculation: subtract the old amount and add the new amount
+        const updatedTotal = currentTotal - expense.amount + parsedAmount;
+        
+        // If we have a Firebase user and expense ID
+        if (currentUser && expense.id) {
+            // Get reference to the expense document
+            const expenseRef = doc(db, "users", currentUser.uid, "expenses", expense.id);
+            
+            // Update the expense amount in Firestore
+            await updateDoc(expenseRef, {
+                amount: parsedAmount
+            });
+            
+            // Update the total spent immediately
+            updateTotalSpent(updatedTotal);
+            
+            console.log("Expense updated successfully");
+        } else {
+            // For offline demo or if no ID is available
+            // Update the displayed amount
+            const amountElem = expenseElement.querySelector('.amount');
+            
+            // Update the amount display
+            const formatter = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            });
+            amountElem.textContent = formatter.format(parsedAmount);
+            
+            // Update the expense object
+            expense.amount = parsedAmount;
+            
+            // Update the total spent
+            updateTotalSpent(updatedTotal);
+        }
+    } catch (error) {
+        console.error("Error updating expense:", error);
+        alert("Error updating expense: " + error.message);
+    }
+}
+
+// Delete expense function
+async function deleteExpense(expense, expenseElement) {
+    // Confirm deletion
+    if (!confirm('Are you sure you want to delete this expense?')) {
+        return;
+    }
+    
+    try {
+        // Get current total spent
+        const currentTotal = parseFloat(totalSpentSpan.textContent.replace(/[^0-9.-]+/g, '')) || 0;
+        
+        // Simple calculation: subtract the expense amount from total
+        const updatedTotal = Math.max(currentTotal - expense.amount, 0);
+        
+        // If we have a Firebase user and expense ID
+        if (currentUser && expense.id) {
+            // Get reference to the expense document
+            const expenseRef = doc(db, "users", currentUser.uid, "expenses", expense.id);
+            
+            // Delete the expense from Firestore
+            await deleteDoc(expenseRef);
+            
+            // Update the total spent immediately
+            updateTotalSpent(updatedTotal);
+            
+            console.log("Expense deleted successfully");
+        } else {
+            // For offline demo or if no ID is available
+            // Remove the element from DOM
+            expenseElement.remove();
+            
+            // Update the total spent
+            updateTotalSpent(updatedTotal);
+            
+            // Show empty state if no expenses left
+            if (expenseList.children.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.id = 'empty-expense-message';
+                emptyMessage.className = 'empty-state';
+                emptyMessage.innerHTML = '<p>No expenses yet. Add your first expense to get started!</p>';
+                expenseList.appendChild(emptyMessage);
+            }
+        }
+    } catch (error) {
+        console.error("Error deleting expense:", error);
+        alert("Error deleting expense: " + error.message);
+    }
 }
 
 function formatDate(date) {
