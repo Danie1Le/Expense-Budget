@@ -1,10 +1,43 @@
-# Expense Budget App
+# Expense Budget Tracker
 
-A web application to help users manage their expenses and track their budgets. Built with Firebase services for authentication, database, and hosting.
+A simple web application to help users track their expenses and manage their budget. Built with Firebase for authentication and data storage.
 
-## Firebase Integration Setup
+## Features
 
-This application uses Firebase for authentication and data storage. To set up Firebase for this application:
+- User Authentication (Email/Password and Google Sign-in)
+- Monthly Budget Setting and Tracking
+- Expense Management with Edit/Delete functionality
+- Budget Analysis with 50/30/20 Rule
+- Responsive Design for Desktop and Mobile
+
+## Tech Stack
+
+- HTML, CSS, JavaScript (vanilla)
+- Firebase Authentication
+- Firebase Firestore Database
+- Chart.js for visualizations
+
+## Project Structure
+
+```
+expense-budget-firebase/
+├── public/                # Static files
+│   ├── index.html         # Main application page
+│   ├── login.html         # Authentication page
+│   ├── css/               # Stylesheets
+│   │   ├── main.css       # Main application styles
+│   │   └── auth.css       # Authentication styles
+│   └── js/                # JavaScript files
+│       ├── main.js        # Main application logic
+│       ├── login.js       # Authentication logic
+│       ├── firebase-config.js # Firebase configuration
+│       └── config.js      # App configuration
+├── server.js              # Simple Express server for local development
+├── firestore.rules        # Security rules for Firestore
+└── package.json           # Project dependencies
+```
+
+## Firebase Setup
 
 1. Create a Firebase project at [https://console.firebase.google.com/](https://console.firebase.google.com/)
 
@@ -12,27 +45,15 @@ This application uses Firebase for authentication and data storage. To set up Fi
    - Go to Authentication > Sign-in method
    - Enable Email/Password provider
    - Enable Google provider
-   - For Google authentication, you may need to configure the OAuth consent screen in the Google Cloud Console
 
-3. For local development with Google authentication:
-   - Go to Authentication > Settings
-   - Under "Authorized domains", add `localhost` (without port number)
-   - The app is configured to use redirect-based authentication on localhost to avoid domain restrictions
-
-4. Create a Firestore database:
+3. Create a Firestore database:
    - Go to Firestore Database > Create database
    - Start in production mode
    - Choose a location close to your users
 
-5. Get your Firebase configuration:
-   - Go to Project Settings > General
-   - Scroll down to "Your apps" section and click the web app icon (</>) if you haven't already added a web app
-   - Register your app with a nickname
-   - Copy the firebaseConfig object
-
-6. Update the Firebase configuration in `public/js/firebase-config.js` with your own values:
+4. Add your Firebase configuration to `public/js/config.js`:
    ```javascript
-   const firebaseConfig = {
+   export const firebaseConfig = {
      apiKey: "YOUR_API_KEY",
      authDomain: "your-project-id.firebaseapp.com",
      projectId: "your-project-id",
@@ -42,66 +63,40 @@ This application uses Firebase for authentication and data storage. To set up Fi
    };
    ```
 
-7. Deploy the Firestore security rules:
-   - Install Firebase CLI: `npm install -g firebase-tools`
-   - Login to Firebase: `firebase login`
-   - Initialize your project: `firebase init`
-   - Deploy the rules: `firebase deploy --only firestore:rules`
-
-## Features
-
-- User Authentication (Email/Password and Google Sign-in)
-- Expense Management
-- Budget Setting and Tracking
-- Expense History
-- Budget Notifications
-- Responsive Web Interface
-
-## Setup Instructions
+## Running Locally
 
 1. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Create a Firebase project at [Firebase Console](https://console.firebase.google.com)
-
-3. Enable the following Firebase services:
-   - Authentication (Email/Password and Google Sign-in)
-   - Firestore Database
-   - Firebase Hosting
-   - Firebase Functions (for notifications)
-
-4. Add your Firebase configuration to `src/config/firebase.js`
-
-5. Start the development server:
+2. Start the development server:
 ```bash
 npm start
 ```
 
-## Project Structure
+3. Open your browser to `http://localhost:3000`
 
-```
-expense-budget/
-├── public/              # Static files
-│   ├── index.html      # Main HTML file
-│   ├── css/            # Stylesheets
-│   └── js/             # Client-side JavaScript
-├── src/                # Source files
-│   └── config/         # Configuration files
-└── package.json        # Project dependencies
+## Deployment
+
+This application can be deployed to Firebase Hosting:
+
+1. Install Firebase CLI:
+```bash
+npm install -g firebase-tools
 ```
 
-## Technologies Used
+2. Login to Firebase:
+```bash
+firebase login
+```
 
-- Firebase Authentication
-- Firebase Firestore
-- Firebase Functions
-- Firebase Hosting
-- HTML5
-- CSS3
-- JavaScript (ES6+)
+3. Initialize Firebase Hosting:
+```bash
+firebase init hosting
+```
 
-## License
-
-ISC 
+4. Deploy to Firebase:
+```bash
+firebase deploy
+``` 

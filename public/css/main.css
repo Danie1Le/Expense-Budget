@@ -88,7 +88,7 @@ body {
 }
 
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
 }
 
 .form-group label {
@@ -184,6 +184,19 @@ body {
     color: #333;
 }
 
+/* Success and error states for buttons */
+.success-button {
+    background-color: #4caf50 !important;
+    color: white !important;
+    border-color: #4caf50 !important;
+}
+
+.error-button {
+    background-color: #f44336 !important;
+    color: white !important;
+    border-color: #f44336 !important;
+}
+
 /* Expense List */
 #expense-list {
     display: flex;
@@ -238,10 +251,6 @@ body {
     gap: 5px;
 }
 
-.expense-item:hover .expense-actions {
-    opacity: 1;
-}
-
 .expense-actions .icon-button {
     background: none;
     border: none;
@@ -271,6 +280,52 @@ body {
 .expense-actions .delete-expense:hover {
     background-color: #d32f2f;
 }
+
+/* Budget Rule Cards */
+.budget-rule-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.rule-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background-color: #f0f0f0;
+    border-radius: 3px;
+    margin: 0.5rem 0;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Category-specific styles */
+.needs-card .progress { background-color: #2196f3; }
+.wants-card .progress { background-color: #9c27b0; }
+.savings-card .progress { background-color: #4caf50; }
+.needs-card .amount { color: #2196f3; }
+.wants-card .amount { color: #9c27b0; }
+.savings-card .amount { color: #4caf50; }
+
+/* Category Icons */
+.expense-icon.groceries { background-color: #e3f2fd; }
+.expense-icon.utilities { background-color: #f3e5f5; }
+.expense-icon.rent { background-color: #e8f5e9; }
+.expense-icon.transportation { background-color: #fff3e0; }
+.expense-icon.entertainment { background-color: #fce4ec; }
+.expense-icon.other { background-color: #f5f5f5; }
 
 /* Charts */
 .charts-container {
@@ -315,231 +370,77 @@ body {
     border-color: #000;
 }
 
-/* Category Icons */
-.expense-icon.groceries { background-color: #e3f2fd; }
-.expense-icon.utilities { background-color: #f3e5f5; }
-.expense-icon.rent { background-color: #e8f5e9; }
-.expense-icon.transportation { background-color: #fff3e0; }
-.expense-icon.entertainment { background-color: #fce4ec; }
-.expense-icon.other { background-color: #f5f5f5; }
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .container {
-        padding: 1rem;
-    }
-
-    .overview-cards {
-        grid-template-columns: 1fr;
-    }
-
-    .charts-container {
-        grid-template-columns: 1fr;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-
-    .expense-item {
-        grid-template-columns: auto 1fr;
-    }
-
-    .expense-item .amount {
-        grid-column: 1 / -1;
-        text-align: right;
-    }
-
-    .dashboard-flex-section {
-        flex-direction: column;
-    }
+/* Two-column layout */
+.dashboard-flex-section {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
 }
 
-/* Utility Classes */
-.hidden {
-    display: none;
+.half-width {
+    flex: 1; 
+    height: 500px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Authentication Styles */
-#auth-section {
+/* Expense section heights */
+#add-expense-section, #expense-history-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 500px;
+}
+
+#add-expense-section .card, #expense-history-section .card {
+    flex: 1;
+    height: calc(100% - 40px);
+    margin-bottom: 0;
+}
+
+/* Form layouts */
+.form-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 1.45rem;
+    flex-grow: 1;
+    padding-bottom: 1.25rem;
+}
+
+.form-submit {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    padding-bottom: 0.5rem;
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid #f0f0f0;
+}
+
+#expense-form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
+    padding: 1.5rem;
+}
+
+.expense-list-card {
+    height: 100% !important;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+/* Empty state */
+.empty-state {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    background-color: #f5f5f5;
-}
-
-.login-container {
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    padding: 2rem;
-    width: 100%;
-    max-width: 420px;
-}
-
-.login-header {
+    height: 100%;
+    flex-grow: 1;
     text-align: center;
-    margin-bottom: 2rem;
-}
-
-.login-header h1 {
-    font-size: 1.75rem;
-    margin-bottom: 0.5rem;
-    color: #1a1a1a;
-}
-
-.login-header p {
-    color: #666;
+    color: #999;
     font-size: 0.95rem;
-}
-
-.vertical-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    margin-bottom: 1.5rem;
-}
-
-.login-button {
-    background-color: #000;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 0.75rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    width: 100%;
-}
-
-.login-button:hover {
-    background-color: #333;
-}
-
-.links {
-    text-align: center;
-    font-size: 0.875rem;
-    color: #666;
-}
-
-.links a {
-    color: #000;
-    text-decoration: none;
-}
-
-.links a:hover {
-    text-decoration: underline;
-}
-
-.hidden {
-    display: none;
-}
-
-/* Main App Styles */
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-header h1 {
-    font-size: 1.75rem;
-    color: #1a1a1a;
-    margin: 0;
-}
-
-#logout-btn {
-    padding: 0.5rem 1rem;
-    background-color: transparent;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.875rem;
-    color: #666;
-    transition: all 0.2s;
-}
-
-#logout-btn:hover {
-    background-color: #f5f5f5;
-    border-color: #666;
-    color: #333;
-}
-
-/* Budget Display */
-#budget-display {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-#budget-display p {
-    padding: 1rem;
-    background-color: #f7fafc;
-    border-radius: 5px;
-    text-align: center;
-}
-
-/* Forms */
-form {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-input[type="number"],
-input[type="text"],
-input[type="date"] {
-    flex: 1;
-    padding: 0.75rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 5px;
-    font-size: 1rem;
-}
-
-button {
-    padding: 0.75rem 1.5rem;
-    background-color: #4299e1;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-button:hover {
-    background-color: #3182ce;
-}
-
-/* Chart Styles */
-.chart-container {
-    margin: 2rem 0;
-    padding: 1rem;
-    background-color: #f7fafc;
-    border-radius: 5px;
-    height: 300px;
-}
-
-#expense-analytics-section {
-    margin-top: 1rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .container {
-        padding: 1rem;
-    }
-
-    form {
-        flex-direction: column;
-    }
-
-    .expense-item {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
 }
 
 /* Modal Styles */
@@ -577,10 +478,6 @@ button:hover {
     font-size: 1.25rem;
 }
 
-.modal-form .form-group {
-    margin-bottom: 1.5rem;
-}
-
 .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -588,21 +485,7 @@ button:hover {
     margin-top: 1.5rem;
 }
 
-/* Budget Rule Cards */
-.budget-rule-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
-}
-
-.rule-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-}
-
+/* Tooltip */
 .tooltip {
     position: relative;
     display: inline-flex;
@@ -642,57 +525,6 @@ button:hover {
     border-color: #333 transparent transparent transparent;
 }
 
-.progress-bar {
-    width: 100%;
-    height: 6px;
-    background-color: #f0f0f0;
-    border-radius: 3px;
-    margin: 0.5rem 0;
-    overflow: hidden;
-}
-
-.progress {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.3s ease;
-}
-
-/* Category-specific styles */
-.needs-card .progress {
-    background-color: #2196f3;
-}
-
-.wants-card .progress {
-    background-color: #9c27b0;
-}
-
-.savings-card .progress {
-    background-color: #4caf50;
-}
-
-.needs-card .amount {
-    color: #2196f3;
-}
-
-.wants-card .amount {
-    color: #9c27b0;
-}
-
-.savings-card .amount {
-    color: #4caf50;
-}
-
-/* Main app section should be visible by default */
-#app-section {
-    display: block;
-}
-
-/* Remove any auth-related display toggles */
-body.app-active {
-    display: block;
-    background-color: #f5f5f5;
-}
-
 /* Input with prefix */
 .input-with-prefix {
     position: relative;
@@ -713,214 +545,66 @@ body.app-active {
     width: 100%;
 }
 
-/* Two-column flex layout */
-.dashboard-flex-section {
+/* Header */
+header {
     display: flex;
-    gap: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.half-width {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    height: 500px; /* Match the explicit section height */
-}
-
-.half-width .card {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.expense-list-card {
-    height: calc(100% - 40px) !important;
-    overflow-y: auto;
-    padding: 1.5rem;
-}
-
-#expense-form {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
     justify-content: space-between;
-    padding: 1.5rem;
-}
-
-/* Empty state */
-.empty-state {
-    display: flex;
-    justify-content: center;
     align-items: center;
-    height: 100%;
-    flex-grow: 1;
-    text-align: center;
-    color: #999;
-    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
 }
 
-/* Updated form layout */
-.form-groups {
-    display: flex;
-    flex-direction: column;
-    gap: 1.45rem;
-    flex-grow: 1;
-    padding-bottom: 1.25rem;
+header h1 {
+    font-size: 1.75rem;
+    color: #1a1a1a;
+    margin: 0;
 }
 
-.form-group {
-    margin-bottom: 0;
-}
-
-.form-submit {
-    margin-top: auto;
-    padding-top: 1.5rem;
-    padding-bottom: 0.5rem;
-    display: flex;
-    justify-content: flex-end;
-    border-top: 1px solid #f0f0f0;
-}
-
-/* Add explicit height for specific sections to ensure they match */
-#add-expense-section, #expense-history-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    height: 500px; /* Fixed explicit height */
-    min-height: auto; /* Remove the min-height setting */
-}
-
-/* Make both cards the same height */
-#expense-form, .expense-list-card {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Google Sign-in Button */
-.google-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 10px 16px;
-    background-color: white;
-    border: 1px solid #dadce0;
-    border-radius: 4px;
-    margin-bottom: 16px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #3c4043;
+#logout-btn {
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    font-size: 0.875rem;
+    color: #666;
+    transition: all 0.2s;
 }
 
-.google-button:hover {
-    background-color: #f7f8f8;
+#logout-btn:hover {
+    background-color: #f5f5f5;
+    border-color: #666;
+    color: #333;
 }
 
-.google-button img {
-    width: 18px;
-    height: 18px;
-    margin-right: 8px;
+/* Utility Classes */
+.hidden {
+    display: none;
 }
 
-.login-subtext {
-    text-align: center;
-    color: #5f6368;
-    font-size: 14px;
-    margin-top: 8px;
-}
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
 
-/* Or Divider */
-.or-divider {
-    display: flex;
-    align-items: center;
-    margin: 16px 0;
-}
+    .overview-cards,
+    .charts-container,
+    .budget-rule-cards {
+        grid-template-columns: 1fr;
+    }
 
-.or-divider::before,
-.or-divider::after {
-    content: "";
-    flex: 1;
-    border-bottom: 1px solid #dadce0;
-}
+    .dashboard-flex-section {
+        flex-direction: column;
+    }
 
-.or-divider span {
-    padding: 0 10px;
-    color: #5f6368;
-    font-size: 12px;
-}
+    .half-width {
+        width: 100%;
+        height: auto;
+    }
 
-/* Success and error states for buttons */
-.success-button {
-    background-color: #4caf50 !important;
-    color: white !important;
-    border-color: #4caf50 !important;
-}
-
-.error-button {
-    background-color: #f44336 !important;
-    color: white !important;
-    border-color: #f44336 !important;
-}
-
-#add-expense-section .card {
-    height: calc(100% - 40px);
-    padding-bottom: 1.5rem; /* Standard padding */
-}
-
-/* Add explicit padding for the expense history button */
-#expense-history-section .button-group {
-    margin-right: 0;
-}
-
-/* Ensure that both sections have the same starting position */
-.dashboard-flex-section > section {
-    display: flex;
-    flex-direction: column;
-    padding-top: 0;
-    margin-top: 0;
-}
-
-/* Fix the height difference between expense sections */
-.dashboard-flex-section {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-/* Ensure both sections have exactly the same height and structure */
-#add-expense-section, #expense-history-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    height: 500px; /* Set explicit equal height for both sections */
-}
-
-/* Make all cards take up the same height minus the header */
-#add-expense-section .card, #expense-history-section .card {
-    flex: 1;
-    height: calc(100% - 40px); /* Account for the section header */
-    margin-bottom: 0;
-}
-
-/* Ensure the expense form takes full height */
-#expense-form {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-/* Make the expense list take full height */
-.expense-list-card {
-    height: 100% !important;
-    overflow-y: auto;
-}
-
-/* Override any other height settings */
-.half-width {
-    flex: 1; 
-    height: 500px;
+    #add-expense-section, 
+    #expense-history-section {
+        height: auto;
+        min-height: 400px;
+    }
 } 
