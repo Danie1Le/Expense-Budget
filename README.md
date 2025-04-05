@@ -105,34 +105,3 @@ expense-budget/
 ## License
 
 ISC 
-
-## Code Organization
-
-The project is organized as follows:
-
-- **public/**: Contains all client-side files
-  - **css/**: 
-    - `auth.css`: Styles for authentication screens (login)
-    - `main.css`: Styles for the main budget dashboard
-  - **js/**: 
-    - `firebase-config.js`: Firebase initialization code
-    - `config.js`: Generated file with Firebase configuration (from .env)
-    - `login.js`: Handles authentication logic
-    - `auth-handler.js`: Handles Google authentication redirects
-    - `main.js`: Main application logic for the budget dashboard
-  - `index.html`: Main budget dashboard page
-  - `login.html`: Authentication page
-  
-- **server.js**: Simple Express server that loads environment variables and serves static files
-- **.env**: Contains Firebase API keys (not included in repository)
-- **firestore.rules**: Security rules for Firestore
-
-## Development
-
-To run the application locally:
-
-1. Clone the repository
-2. Create a `.env` file with your Firebase configuration (see below)
-3. Run `npm install` to install dependencies
-4. Run `npm start` to start the development server
-5. Open http://localhost:8080 in your browser 
