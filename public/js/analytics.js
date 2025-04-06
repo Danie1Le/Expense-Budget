@@ -9,55 +9,38 @@ let currentTimeRange = 'week';
 
 // Initialize the analytics functionality
 export function initializeAnalytics() {
-    console.log('Initializing analytics');
-    
     // Initialize charts for the first time
     createCharts();
     
-    // Add event listeners to tab buttons
-    setupTabButtons();
-    
-    // If we already have expense data available, update charts
-    if (window.userExpenses && window.userExpenses.length > 0) {
-        console.log(`Initializing charts with ${window.userExpenses.length} existing expenses`);
-        updateCharts(window.userExpenses);
-    } else {
-        console.log('No initial expense data, showing empty charts');
-        resetCharts();
-    }
-    
-    console.log('Analytics initialization complete');
-}
-
-// Set up event listeners for the tab buttons
-function setupTabButtons() {
-    const tabButtons = document.querySelectorAll('.time-button');
-    
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
+    // Set up time frame button listeners
+    const timeButtons = document.querySelectorAll('.time-button');
+    timeButtons.forEach(button => {
+        button.addEventListener('click', function() {
             // Remove active class from all buttons
-            tabButtons.forEach(btn => btn.classList.remove('active'));
+            timeButtons.forEach(btn => btn.classList.remove('active'));
             
             // Add active class to clicked button
-            button.classList.add('active');
+            this.classList.add('active');
             
-            // Update the time range
-            const previousTimeRange = currentTimeRange;
-            currentTimeRange = button.dataset.timeframe;
+            // Update current time range
+            currentTimeRange = this.dataset.timeframe;
             
-            console.log(`Time range changed from ${previousTimeRange} to ${currentTimeRange}`);
-            
-            // Immediately refresh charts with global userExpenses
-            // This is defined in main.js and should be available
+            // Always use the global window.userExpenses which is updated in real-time
             if (window.userExpenses && window.userExpenses.length > 0) {
                 updateCharts(window.userExpenses);
             } else {
-                // If there's no global userExpenses, we'll need to reset charts
                 resetCharts();
                 updateSpendingInsights([]);
             }
         });
     });
+    
+    // If we already have expense data available, update charts
+    if (window.userExpenses && window.userExpenses.length > 0) {
+        updateCharts(window.userExpenses);
+    } else {
+        resetCharts();
+    }
 }
 
 // Create the initial charts
@@ -89,6 +72,10 @@ function createCharts() {
             plugins: {
                 legend: {
                     position: 'right',
+                    labels: {
+                        boxWidth: 15,
+                        padding: 10
+                    }
                 },
                 tooltip: {
                     callbacks: {
@@ -110,7 +97,7 @@ function createCharts() {
     trendChart = new Chart(trendCtx, {
         type: 'line',
         data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
             datasets: [{
                 label: 'Daily Spending',
                 data: [0, 0, 0, 0, 0, 0, 0],
@@ -133,6 +120,31 @@ function createCharts() {
                 }
             },
             plugins: {
+                legend: {
+                        display: true,
+                    onClick: null, // Disable clicking on legend
+                    labels: {
+                        boxWidth: 0, // Remove the colored box/circle
+                        padding: 0,  // Remove padding
+                        font: {
+                            weight: 'bold'
+                        },
+                        generateLabels: function(chart) {
+                            // Custom label generation to remove the color box
+                            const datasets = chart.data.datasets;
+                            return datasets.map(dataset => {
+                                return {
+                                    text: dataset.label,
+                                    fillStyle: 'transparent',
+                                    strokeStyle: 'transparent',
+                                    lineWidth: 0,
+                                    hidden: false,
+                                    index: 0
+                                };
+                            });
+                        }
+                    }
+                },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -147,11 +159,8 @@ function createCharts() {
 
 // Update all charts with new data
 export function updateCharts(expenses = []) {
-    console.log(`Updating charts with ${expenses ? expenses.length : 0} expenses`);
-    
     // If there are no expenses, reset charts and return
     if (!expenses || expenses.length === 0) {
-        console.log('No expenses data, resetting charts');
         resetCharts();
         updateSpendingInsights([]); // Update insights with empty data
         return;
@@ -159,11 +168,9 @@ export function updateCharts(expenses = []) {
     
     // Filter expenses by the current time range
     const filteredExpenses = filterExpensesByTimeRange(expenses);
-    console.log(`Filtered to ${filteredExpenses.length} expenses in ${currentTimeRange} time range`);
     
     // If there are no expenses in the selected time range, reset charts
     if (filteredExpenses.length === 0) {
-        console.log('No expenses in current time range, resetting charts');
         resetCharts();
         updateSpendingInsights([]); // Update insights with empty data
         return;
@@ -177,14 +184,10 @@ export function updateCharts(expenses = []) {
     
     // Update spending insights
     updateSpendingInsights(filteredExpenses);
-    
-    console.log('Charts update completed');
 }
 
 // Reset charts to show empty data state
-export function resetCharts() {
-    console.log('Resetting charts to empty state');
-    
+function resetCharts() {
     // Reset category chart
     if (categoryChart) {
         categoryChart.data.labels = ['No Data'];
@@ -199,13 +202,12 @@ export function resetCharts() {
         
         // Generate appropriate empty labels based on current time range
         if (currentTimeRange === 'week') {
+            // Use same order as updateTrendChart: Sunday to Saturday
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             labels.push(...days);
         } else if (currentTimeRange === 'month') {
-            // Generate labels for days 1-30
-            for (let i = 1; i <= 30; i++) {
-                labels.push(i.toString());
-            }
+            // Use same weeks as updateTrendChart
+            labels.push('Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5');
         } else { // year
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             labels.push(...months);
@@ -216,8 +218,6 @@ export function resetCharts() {
         trendChart.data.datasets[0].data = Array(labels.length).fill(0);
         trendChart.update();
     }
-    
-    console.log('Charts reset completed');
 }
 
 // Update the category chart with expense data
@@ -283,382 +283,279 @@ function updateCategoryChart(expenses) {
     
     // Update chart
     categoryChart.update();
-    
-    console.log('Category chart updated with data:', categoryChart.data);
 }
 
 // Update the trend chart with expense data
 function updateTrendChart(expenses) {
-    // Filter expenses by selected time range
-    const filteredExpenses = filterExpensesByTimeRange(expenses);
-    
+    // Format to group expenses by day, week, or month
+    let expensesByPeriod = {};
     let labels = [];
-    let data = [];
     
-    // Set up labels and data structure based on time range
-    if(currentTimeRange === 'week') {
-        // Use proper day names
-        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        labels = [...dayNames];
-        data = [0, 0, 0, 0, 0, 0, 0];
+    // Determine labels and group expenses based on current time range
+    if (currentTimeRange === 'week') {
+        // Use days of the week as labels - in order from Sunday to Saturday
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        labels = [...days];
         
-        // Group expenses by day of week
-        filteredExpenses.forEach(expense => {
-            // Create a date object from the expense date
-            // Handle direct ISO strings
+        // Initialize expense totals for each day
+        days.forEach(day => {
+            expensesByPeriod[day] = 0;
+        });
+        
+        // Group expenses by day of the week
+        expenses.forEach(expense => {
+            // Handle both string date format and Date objects
             let expenseDate;
             if (typeof expense.date === 'string' && expense.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                // Split YYYY-MM-DD into parts
+                // For YYYY-MM-DD format strings, create date using local time to avoid timezone issues
                 const [year, month, day] = expense.date.split('-').map(Number);
-                // Create date with correct components (month is 0-indexed)
-                expenseDate = new Date(year, month - 1, day, 12, 0, 0);
+                // Create date using local components (month is 0-indexed in JavaScript)
+                expenseDate = new Date(year, month - 1, day);
+            } else {
+                // For other formats, use the standard Date constructor
+                expenseDate = new Date(expense.date);
+            }
+            
+            // Get the day of week index (0 = Sunday, 1 = Monday, etc.)
+            const dayIndex = expenseDate.getDay();
+            const dayOfWeek = days[dayIndex];
+            
+            // Add expense amount to corresponding day
+            expensesByPeriod[dayOfWeek] += expense.amount;
+        });
+    } 
+    else if (currentTimeRange === 'month') {
+        // Use days of the month grouped into weeks as labels
+        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+        
+        // Initialize expense totals for each week
+        labels.forEach(week => {
+            expensesByPeriod[week] = 0;
+        });
+        
+        // Group expenses by week of the month
+        expenses.forEach(expense => {
+            // Handle both string date format and Date objects
+            let expenseDate;
+            if (typeof expense.date === 'string' && expense.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const [year, month, day] = expense.date.split('-').map(Number);
+                expenseDate = new Date(year, month - 1, day);
             } else {
                 expenseDate = new Date(expense.date);
             }
             
-            // Get day of week (0 = Sunday, 1 = Monday, etc.)
-            const dayOfWeek = expenseDate.getDay();
-            // Convert to our array index (0 = Monday, 6 = Sunday)
-           const adjustedIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            const dayOfMonth = expenseDate.getDate();
             
-            data[adjustedIndex] += expense.amount;
+            // Assign to week based on day of month
+            let week;
+            if (dayOfMonth <= 7) week = 'Week 1';
+            else if (dayOfMonth <= 14) week = 'Week 2';
+            else if (dayOfMonth <= 21) week = 'Week 3';
+            else if (dayOfMonth <= 28) week = 'Week 4';
+            else week = 'Week 5';
+            
+            expensesByPeriod[week] += expense.amount;
         });
     } 
-    else if (currentTimeRange === 'month') {
-        // Use last 30 days, grouped by week
-        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-        data = [0, 0, 0, 0];
-        
-        // Get current date
-        const today = new Date();
-        const todayFormatted = formatDateToYYYYMMDD(today);
-        
-        // Group expenses by week
-        filteredExpenses.forEach(expense => {
-            // Get the date difference in days
-            let daysSince;
-            
-             if (typeof expense.date === 'string' && expense.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                // For ISO date strings, calculate days between dates
-                const expenseDateParts = expense.date.split('-').map(Number);
-                const expenseDate = new Date(expenseDateParts[0], expenseDateParts[1] - 1, expenseDateParts[2]);
-                
-                // Calculate days between dates
-                const diffTime = today.getTime() - expenseDate.getTime();
-                daysSince = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            } 
-            else {
-                // For other formats, use provided date object
-                const expenseDate = new Date(expense.date);
-                const diffTime = today.getTime() - expenseDate.getTime();
-                daysSince = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            }
-            
-            // Assign to appropriate week
-            const weekIndex = Math.min(Math.floor(daysSince / 7), 3);
-            data[weekIndex] += expense.amount;
-        });
-        
-        // Reverse the data to show oldest to newest
-        data.reverse();
-    }
-    else if (currentTimeRange === 'year') {
-        // Use last 12 months
+    else { // year
+        // Use months as labels
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        labels = [];
-        data = Array(12).fill(0);
+        labels = [...months];
         
-        // Get current month and year
-        const today = new Date();
-        const currentMonth = today.getMonth();
-        
-        // Set up labels for last 12 months
-        for (let i = 0; i < 12; i++) {
-            const monthIndex = (currentMonth - 11 + i + 12) % 12; // Go back 11 months and loop
-            labels.push(months[monthIndex]);
-        }
+        // Initialize expense totals for each month
+        months.forEach(month => {
+            expensesByPeriod[month] = 0;
+        });
         
         // Group expenses by month
-        filteredExpenses.forEach(expense => {
-            // Get the month from the expense date
-            let expenseMonth;
-            
+        expenses.forEach(expense => {
+            // Handle both string date format and Date objects
+            let expenseDate;
             if (typeof expense.date === 'string' && expense.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                // Extract month from YYYY-MM-DD format (1-indexed)
-                expenseMonth = parseInt(expense.date.split('-')[1], 10) - 1;
-            } 
-             else {
-                // For other formats, use provided date object
-                expenseMonth = new Date(expense.date).getMonth();
+                const [year, month, day] = expense.date.split('-').map(Number);
+                expenseDate = new Date(year, month - 1, day);
+            } else {
+                expenseDate = new Date(expense.date);
             }
             
-           // Calculate position in the data array (0-11)
-            const monthsAgo = (currentMonth - expenseMonth + 12) % 12;
-            const position = 11 - monthsAgo;
-            
-            if (position >= 0 && position < 12) {
-                data[position] += expense.amount;
-            }
+            const monthIndex = expenseDate.getMonth();
+            const month = months[monthIndex];
+            expensesByPeriod[month] += expense.amount;
         });
     }
+    
+    // Prepare data for the chart
+    const data = labels.map(label => expensesByPeriod[label] || 0);
     
     // Update chart data
     trendChart.data.labels = labels;
     trendChart.data.datasets[0].data = data;
-    
-    // Update chart
     trendChart.update();
 }
 
-// Filter expenses based on selected time range
+// Filter expenses by the selected time range
 function filterExpensesByTimeRange(expenses) {
-    // Get today's date in YYYY-MM-DD format
+    // Return empty array if no expenses
+    if (!expenses || expenses.length === 0) return [];
+    
+    // No filtering needed for empty array
+    if (expenses.length === 0) return [];
+    
     const now = new Date();
-    const todayFormatted = formatDateToYYYYMMDD(now);
+    const today = formatDateToYYYYMMDD(now);
     
-    // Calculate start date for filtering
-    let startDate;
-    
-    switch (currentTimeRange) {
-        case 'week':
-            startDate = new Date(now);
-            startDate.setDate(now.getDate() - 6); // 7 days including today
-            break;
-        case 'month':
-            startDate = new Date(now);
-            startDate.setMonth(now.getMonth() - 1);
-            break;
-        case 'year':
-            startDate = new Date(now);
-            startDate.setFullYear(now.getFullYear() - 1);
-            break;
-        default:
-            startDate = new Date(now);
-            startDate.setDate(now.getDate() - 6);
-    }
-    
-    // Format start date as YYYY-MM-DD
-    const startDateFormatted = formatDateToYYYYMMDD(startDate);
-    
-    // Filter expenses that fall within the date range
     return expenses.filter(expense => {
-        // Handle ISO date strings directly
+        // Parse the expense date consistently
+        let expenseDate;
         if (typeof expense.date === 'string' && expense.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            return expense.date >= startDateFormatted && expense.date <= todayFormatted;
+            expenseDate = expense.date; // Already in YYYY-MM-DD format
+        } else if (typeof expense.date === 'string') {
+            // Try to parse other string formats to YYYY-MM-DD
+            const parsedDate = new Date(expense.date);
+            expenseDate = formatDateToYYYYMMDD(parsedDate);
+        } else {
+            // Handle Date objects
+            expenseDate = formatDateToYYYYMMDD(new Date(expense.date));
         }
         
-        // Fallback for other date formats
-        const expenseDate = new Date(expense.date);
-        const expenseDateFormatted = formatDateToYYYYMMDD(expenseDate);
-        return expenseDateFormatted >= startDateFormatted && expenseDateFormatted <= todayFormatted;
+        // For direct string comparison of dates
+        if (currentTimeRange === 'week') {
+            // Calculate the date 7 days ago
+            const weekAgo = new Date(now);
+            weekAgo.setDate(now.getDate() - 7);
+            const weekAgoStr = formatDateToYYYYMMDD(weekAgo);
+            
+            // Include if date is between weekAgo and today
+            return expenseDate >= weekAgoStr;
+        } 
+        else if (currentTimeRange === 'month') {
+            // Calculate the date 30 days ago
+            const monthAgo = new Date(now);
+            monthAgo.setDate(now.getDate() - 30);
+            const monthAgoStr = formatDateToYYYYMMDD(monthAgo);
+            
+            // Include if date is between monthAgo and today
+            return expenseDate >= monthAgoStr;
+        } 
+        else { // year
+            // Calculate the date 365 days ago
+            const yearAgo = new Date(now);
+            yearAgo.setDate(now.getDate() - 365);
+            const yearAgoStr = formatDateToYYYYMMDD(yearAgo);
+            
+            // Include if date is between yearAgo and today
+            return expenseDate >= yearAgoStr;
+        }
     });
 }
 
-// Helper function to format a date to YYYY-MM-DD string
+// Helper function to format a Date to YYYY-MM-DD string
 function formatDateToYYYYMMDD(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-// Get insights about spending patterns
-export function getSpendingInsights(expenses = []) {
-    console.log('Calculating spending insights for', expenses.length, 'expenses');
-    
-    if (!expenses || expenses.length === 0) {
-        console.log('No expenses data for insights');
-        return {
-            topCategory: 'None',
-            topCategoryAmount: 0,
-            topCategoryPercentage: 0,
-            dailyAverage: 0,
-            totalSpent: 0
-        };
-    }
-    
-    // Filter expenses by selected time range
-    const filteredExpenses = filterExpensesByTimeRange(expenses);
-    console.log('Filtered to', filteredExpenses.length, 'expenses in the', currentTimeRange, 'time range');
-    
-    // If no expenses in the current time range
-    if (filteredExpenses.length === 0) {
-        return {
-            topCategory: 'None',
-            topCategoryAmount: 0,
-            topCategoryPercentage: 0,
-            dailyAverage: 0,
-            totalSpent: 0
-        };
-    }
-    
-    // Calculate totals by category
-    const categoryTotals = {
-        'groceries': 0,
-        'utilities': 0,
-        'rent': 0,
-        'transportation': 0,
-        'entertainment': 0,
-        'other': 0
-    };
-    
-    // Sum expenses by category
-    filteredExpenses.forEach(expense => {
-        const category = expense.category.toLowerCase();
-        if (categoryTotals.hasOwnProperty(category)) {
-            categoryTotals[category] += expense.amount;
-        } else {
-            categoryTotals.other += expense.amount;
-        }
-    });
-    
-    // Calculate total spent
-    const totalSpent = Object.values(categoryTotals).reduce((sum, val) => sum + val, 0);
-    
-    // Find top spending category
-    let topCategory = 'other';
-    let topAmount = 0;
-    
-    for (const [category, amount] of Object.entries(categoryTotals)) {
-        if (amount > topAmount) {
-            topAmount = amount;
-            topCategory = category;
-        }
-    }
-    
-    // If no spending in any category
-    if (topAmount === 0) {
-        topCategory = 'None';
-    }
-    
-    // Calculate daily average (use exact number of days for accuracy)
-    let daysInRange;
-    
-    if (currentTimeRange === 'week') {
-        daysInRange = 7;
-    } else if (currentTimeRange === 'month') {
-        // For a more accurate calculation, we could determine the actual days in the time range
-        // But for simplicity, using 30 days for a month
-        daysInRange = 30;
-    } else { // year
-        // Using 365 days for simplicity
-        daysInRange = 365;
-    }
-    
-    const dailyAverage = totalSpent / daysInRange;
-    
-    const result = {
-        topCategory: topCategory === 'None' ? 'None' : topCategory.charAt(0).toUpperCase() + topCategory.slice(1),
-        topCategoryAmount: topAmount,
-        topCategoryPercentage: totalSpent > 0 ? (topAmount / totalSpent) * 100 : 0,
-        dailyAverage: dailyAverage,
-        totalSpent: totalSpent
-    };
-    
-    console.log('Spending insights:', result);
-    return result;
-}
-
-// Update the spending insights in the UI
-export function updateSpendingInsights(expenses = []) {
-    const insights = getSpendingInsights(expenses);
-    console.log('Updating spending insights UI with:', insights);
-    
+// Update the spending insights in the UI directly from the filtered expenses
+function updateSpendingInsights(expenses = []) {
     const topCategoryEl = document.getElementById('top-category');
     const dailyAvgEl = document.getElementById('daily-average');
     const periodTotalEl = document.getElementById('period-total');
     
     if (!topCategoryEl || !dailyAvgEl || !periodTotalEl) {
-        console.warn('Some spending insights elements not found in the DOM');
         return;
     }
     
-    if (insights) {
-        // Format the values
-        const topCategoryText = insights.topCategory === 'None' ? 
-            'No data yet' : 
-            `${insights.topCategory} ($${insights.topCategoryAmount.toFixed(2)})`;
-        const dailyAvgText = `$${insights.dailyAverage.toFixed(2)}`;
-        const totalSpentText = `$${insights.totalSpent.toFixed(2)}`;
+    // Filter expenses by selected time range
+    const filteredExpenses = filterExpensesByTimeRange(expenses);
+    
+    // Default values for no data
+    let topCategory = 'No data yet';
+    let dailyAvgText = '$0.00';
+    let totalSpentText = '$0.00';
+    
+    // If we have expenses to analyze
+    if (filteredExpenses && filteredExpenses.length > 0) {
+        // Calculate totals by category
+        const categoryTotals = {
+            'groceries': 0,
+            'utilities': 0,
+            'rent': 0,
+            'transportation': 0,
+            'entertainment': 0,
+            'other': 0
+        };
         
-        // Update the UI
-        topCategoryEl.textContent = topCategoryText;
-        dailyAvgEl.textContent = dailyAvgText;
-        periodTotalEl.textContent = totalSpentText;
-        
-        // Show empty state message if no data
-        const insightsContainer = document.getElementById('spending-insights');
-        if (insightsContainer) {
-            if (insights.totalSpent === 0) {
-                // Add empty state if it doesn't exist
-                if (!document.querySelector('.insights-empty-state')) {
-                    const emptyState = document.createElement('div');
-                    emptyState.className = 'insights-empty-state';
-                    emptyState.textContent = 'Add expenses to see spending insights';
-                    emptyState.style.textAlign = 'center';
-                    emptyState.style.padding = '20px 0';
-                    emptyState.style.fontStyle = 'italic';
-                    emptyState.style.color = '#888';
-                    
-                    // Add empty state before or after the insights content
-                    insightsContainer.appendChild(emptyState);
-                    
-                    // Hide the individual insight items
-                    const insightItems = insightsContainer.querySelectorAll('.insight-item');
-                    insightItems.forEach(item => item.style.display = 'none');
-                }
+        // Sum expenses by category
+        filteredExpenses.forEach(expense => {
+            const category = expense.category.toLowerCase();
+            if (categoryTotals.hasOwnProperty(category)) {
+                categoryTotals[category] += expense.amount;
             } else {
-                // Show the insights and remove empty state if it exists
-                const emptyState = document.querySelector('.insights-empty-state');
-                if (emptyState) {
-                    emptyState.remove();
-                }
-                
-                // Show the individual insight items
-                const insightItems = insightsContainer.querySelectorAll('.insight-item');
-                insightItems.forEach(item => item.style.display = 'block');
-            }
-        }
-    } else {
-        console.warn('No insights available to update UI');
-    }
-}
-
-// Set up event listeners for timeframe selection
-export function setupTimeframeListeners(initialExpenses = []) {
-    console.log('Setting up timeframe listeners');
-    
-    // Store initial expenses in window.userExpenses if not already set
-    if (!window.userExpenses) {
-        window.userExpenses = initialExpenses;
-    }
-    
-    const timeButtons = document.querySelectorAll('.time-button');
-    
-    timeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            // Remove active class from all buttons
-            timeButtons.forEach(btn => btn.classList.remove('active'));
-            
-            // Add active class to clicked button
-            this.classList.add('active');
-            
-            // Update current time range
-            const newTimeRange = this.dataset.timeframe;
-            console.log(`Changing time range from ${currentTimeRange} to ${newTimeRange}`);
-            currentTimeRange = newTimeRange;
-            
-            // Always use the global window.userExpenses which is updated in real-time
-            if (window.userExpenses && window.userExpenses.length > 0) {
-                console.log(`Updating charts for new time range: ${newTimeRange} with ${window.userExpenses.length} expenses`);
-                updateCharts(window.userExpenses);
-            } else {
-                console.log(`Resetting charts for new time range: ${newTimeRange} (no expenses)`);
-                resetCharts();
-                updateSpendingInsights([]);
+                categoryTotals.other += expense.amount;
             }
         });
-    });
+        
+        // Calculate total spent
+        const totalSpent = Object.values(categoryTotals).reduce((sum, val) => sum + val, 0);
+        
+        // Find top spending category
+        let topCategoryName = 'other';
+        let topAmount = 0;
+        
+        for (const [category, amount] of Object.entries(categoryTotals)) {
+            if (amount > topAmount) {
+                topAmount = amount;
+                topCategoryName = category;
+            }
+        }
+        
+        // Calculate daily average
+        let daysInRange = currentTimeRange === 'week' ? 7 : (currentTimeRange === 'month' ? 30 : 365);
+        const dailyAverage = totalSpent / daysInRange;
+        
+        // Format the values
+        topCategory = topAmount > 0 ? 
+            `${topCategoryName.charAt(0).toUpperCase() + topCategoryName.slice(1)} ($${topAmount.toFixed(2)})` : 
+            'No data yet';
+        dailyAvgText = `$${dailyAverage.toFixed(2)}`;
+        totalSpentText = `$${totalSpent.toFixed(2)}`;
+    }
     
-    console.log('Timeframe listeners setup completed');
+    // Update the UI
+    topCategoryEl.textContent = topCategory;
+    dailyAvgEl.textContent = dailyAvgText;
+    periodTotalEl.textContent = totalSpentText;
+    
+    // Show empty state message if no data
+    const insightsContainer = document.getElementById('spending-insights');
+    if (insightsContainer) {
+        if (filteredExpenses.length === 0) {
+            // Add empty state if it doesn't exist
+            if (!document.querySelector('.insights-empty-state')) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'insights-empty-state';
+                emptyState.textContent = 'Add expenses to see spending insights';
+                emptyState.style.textAlign = 'center';
+                emptyState.style.padding = '20px 0';
+                emptyState.style.fontStyle = 'italic';
+                emptyState.style.color = '#888';
+                
+                // Add empty state before or after the insights content
+                insightsContainer.appendChild(emptyState);
+                
+                // Hide the individual insight items
+                const insightItems = insightsContainer.querySelectorAll('.insight-item');
+                insightItems.forEach(item => item.style.display = 'none');
+            }
+        } else {
+            // Show the insights and remove empty state if it exists
+            const emptyState = document.querySelector('.insights-empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            // Show the individual insight items
+            const insightItems = insightsContainer.querySelectorAll('.insight-item');
+            insightItems.forEach(item => item.style.display = 'block');
+        }
+    }
 } 

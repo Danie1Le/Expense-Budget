@@ -131,20 +131,27 @@ body {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     font-size: 1rem;
-    color: #333;
+    color: #757575;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: background-color 0.2s, box-shadow 0.2s;
     margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .google-button:hover {
+    background-color: #fafafa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+}
+
+.google-button:active {
     background-color: #f5f5f5;
 }
 
 .google-button img {
-    width: 18px;
-    height: 18px;
-    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
 }
 
 .or-divider {

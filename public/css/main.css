@@ -247,6 +247,7 @@ body {
 .expense-icon.rent::before { content: '\f015'; } /* Home */
 .expense-icon.transportation::before { content: '\f1b9'; } /* Car */
 .expense-icon.entertainment::before { content: '\f008'; } /* Film */
+.expense-icon.savings::before { content: '\f19c'; } /* Bank/Institution */
 .expense-icon.other::before { content: '\f0c0'; } /* Users */
 
 .expense-details {
@@ -358,6 +359,7 @@ body {
 .expense-icon.rent { background-color: #9C27B0; }
 .expense-icon.transportation { background-color: #FF9800; }
 .expense-icon.entertainment { background-color: #E91E63; }
+.expense-icon.savings { background-color: #009688; } /* Teal color for savings */
 .expense-icon.other { background-color: #607D8B; }
 
 /* Charts */
@@ -373,9 +375,11 @@ body {
 }
 
 .chart-card h3 {
-    font-size: 1rem;
-    color: #666;
-    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 1.25rem;
+    text-align: center;
+    font-weight: 600;
 }
 
 /* Time control buttons styling - updated to match primary/secondary button style */
